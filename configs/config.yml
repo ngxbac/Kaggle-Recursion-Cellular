@@ -1,0 +1,73 @@
+model_params:
+  model: cell_densenet
+  model_name: densenet121
+  n_channels: 6
+  num_classes: 1108
+
+args:
+  expdir: "src"
+  logdir: &logdir "./logs/cell"
+  baselogdir: "./logs/cell"
+
+distributed_params:
+  opt_level: O1
+
+stages:
+
+  state_params:
+    main_metric: &reduce_metric accuracy01
+    minimize_metric: False
+
+  criterion_params:
+    criterion: CrossEntropyLoss
+
+  optimizer_params:
+    optimizer: Adam
+    lr: 0.0003
+    weight_decay: 0.0001
+
+  scheduler_params:
+    scheduler: MultiStepLR
+    milestones: [25, 30, 40]
+    gamma: 0.5
+
+  data_params:
+    batch_size: 128
+    num_workers: 4
+    drop_last: False
+
+    image_size: &image_size 320
+    train_csv: "./csv/train_0.csv"
+    valid_csv: "./csv/valid_0.csv"
+    root: "/raid/data/kaggle/recursion-cellular-image-classification/"
+
+  stage1:
+
+    state_params:
+      num_epochs: 45
+
+    callbacks_params: &callback_params
+      loss:
+        callback: CriterionCallback
+      optimizer:
+        callback: OptimizerCallback
+      accuracy:
+        callback: AccuracyCallback
+        accuracy_args: [1]
+      scheduler:
+        callback: SchedulerCallback
+        reduce_metric: *reduce_metric
+      saver:
+        callback: CheckpointCallback
+
+#  stage2:
+#
+#    state_params:
+#      num_epochs: 9
+#
+#    optimizer_params:
+#      optimizer: Adam
+#      lr: 0.0001
+#      weight_decay: 0.0001
+#
+#    callbacks_params: *callback_params
