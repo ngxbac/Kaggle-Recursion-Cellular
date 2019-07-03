@@ -1,6 +1,6 @@
 model_params:
-  model: cell_densenet
-  model_name: densenet121
+  model: cell_senet
+  model_name: se_resnext50_32x4d
   n_channels: 6
   num_classes: 1108
 

@@ -10,19 +10,16 @@ def cell_senet(model_name='se_resnext50', num_classes=1108, n_channels=6):
         num_classes=num_classes,
         pretrained=True
     )
-    conv1 = model.layer0.conv1
-    model.layer0.conv1 = nn.Conv2d(in_channels=n_channels,
-                                   out_channels=conv1.out_channels,
-                                   kernel_size=conv1.kernel_size,
-                                   stride=conv1.stride,
-                                   padding=conv1.padding,
-                                   bias=conv1.bias)
+    print(model)
+    conv1 = model._features[0].conv1
+    model._features[0].conv1 = nn.Conv2d(in_channels=n_channels,
+                            out_channels=conv1.out_channels,
+                            kernel_size=conv1.kernel_size,
+                            stride=conv1.stride,
+                            padding=conv1.padding,
+                            bias=conv1.bias)
 
     # copy pretrained weights
-    model.layer0.conv1.weight.data[:, :3, :, :] = conv1.weight.data
-    model.layer0.conv1.weight.data[:, 3:n_channels, :, :] = conv1.weight.data[:, :int(n_channels-3), :, :]
-
-    model.avgpool = nn.AdaptiveAvgPool2d(1)
-    in_features = model.last_linear.in_features
-    model.last_linear = nn.Linear(in_features, num_classes)
+    model._features[0].conv1.weight.data[:,:3,:,:] = conv1.weight.data
+    model._features[0].conv1.weight.data[:,3:n_channels,:,:] = conv1.weight.data[:,:int(n_channels-3),:,:]
     return model
