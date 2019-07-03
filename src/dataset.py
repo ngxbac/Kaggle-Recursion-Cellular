@@ -6,6 +6,35 @@ from torch.utils.data import Dataset
 
 NUM_CLASSES = 1108
 
+DEFAULT_CHANNELS = (1, 2, 3, 4, 5, 6)
+RGB_MAP = {
+    1: {
+        'rgb': np.array([19, 0, 249]),
+        'range': [0, 51]
+    },
+    2: {
+        'rgb': np.array([42, 255, 31]),
+        'range': [0, 107]
+    },
+    3: {
+        'rgb': np.array([255, 0, 25]),
+        'range': [0, 64]
+    },
+    4: {
+        'rgb': np.array([45, 255, 252]),
+        'range': [0, 191]
+    },
+    5: {
+        'rgb': np.array([250, 0, 253]),
+        'range': [0, 89]
+    },
+    6: {
+        'rgb': np.array([254, 255, 40]),
+        'range': [0, 191]
+    }
+}
+
+
 
 def load_image(path):
     image = cv2.imread(path, 0)
@@ -61,6 +90,39 @@ def load_images_as_tensor(image_paths, dtype=np.uint8):
     return data
 
 
+def convert_tensor_to_rgb(t, channels=DEFAULT_CHANNELS, vmax=255, rgb_map=RGB_MAP):
+    """
+    Converts and returns the image data as RGB image
+    Parameters
+    ----------
+    t : np.ndarray
+        original image data
+    channels : list of int
+        channels to include
+    vmax : int
+        the max value used for scaling
+    rgb_map : dict
+        the color mapping for each channel
+        See rxrx.io.RGB_MAP to see what the defaults are.
+    Returns
+    -------
+    np.ndarray the image data of the site as RGB channels
+    """
+    colored_channels = []
+    for i, channel in enumerate(channels):
+        x = (t[:, :, i] / vmax) / \
+            ((rgb_map[channel]['range'][1] - rgb_map[channel]['range'][0]) / 255) + \
+            rgb_map[channel]['range'][0] / 255
+        x = np.where(x > 1., 1., x)
+        x_rgb = np.array(
+            np.outer(x, rgb_map[channel]['rgb']).reshape(512, 512, 3),
+            dtype=int)
+        colored_channels.append(x_rgb)
+    im = np.array(np.array(colored_channels).sum(axis=0), dtype=int)
+    im = np.where(im > 255, 255, im)
+    return im
+
+
 class RecursionCellularSite(Dataset):
 
     def __init__(self,
@@ -111,6 +173,7 @@ class RecursionCellularSite(Dataset):
         ]
 
         image = load_images_as_tensor(channel_paths, dtype=np.float32)
+        # image = convert_tensor_to_rgb(image)
         image = image / 255
         if self.transform:
             image = self.transform(image=image)['image']
