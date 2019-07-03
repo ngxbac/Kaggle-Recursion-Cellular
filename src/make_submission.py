@@ -34,7 +34,7 @@ def predict(model, loader):
 
 def predict_all():
     test_csv = '/raid/data/kaggle/recursion-cellular-image-classification/test.csv'
-    log_dir = "/raid/bac/kaggle/logs/recursion_cell/test/rgb/se_resnext50_32x4d/"
+    log_dir = "/raid/bac/kaggle/logs/recursion_cell/test/rgb_more_augs_2/se_resnext50_32x4d/"
     root = "/raid/data/kaggle/recursion-cellular-image-classification/"
     site = 1
     channels = [1,2,3]
@@ -74,7 +74,7 @@ def predict_all():
     submission = df.copy()
     submission['sirna'] = all_preds.astype(int)
     os.makedirs("submission", exist_ok=True)
-    submission.to_csv('./submission/submission_se_resnext50_32x4d_rgb.csv', index=False, columns=['id_code', 'sirna'])
+    submission.to_csv('./submission/submission_se_resnext50_32x4d_rgb_more_aug_2.csv', index=False, columns=['id_code', 'sirna'])
 
 
 if __name__ == '__main__':

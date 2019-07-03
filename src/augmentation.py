@@ -3,14 +3,19 @@ from albumentations import *
 
 def train_aug(image_size=224):
     return Compose([
-        RandomCrop(image_size, image_size),
-        HorizontalFlip(),
+        RandomCrop(448, 448),
+        Resize(image_size, image_size),
+        RandomRotate90(),
+        Flip(),
+        Transpose(),
+        # HorizontalFlip(),
         # Normalize(),
     ], p=1)
 
 
 def valid_aug(image_size=224):
     return Compose([
-        CenterCrop(image_size, image_size),
+        CenterCrop(448, 448),
+        Resize(320, 320)
         # Normalize(),
     ], p=1)
