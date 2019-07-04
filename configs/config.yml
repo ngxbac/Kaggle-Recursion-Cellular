@@ -32,11 +32,11 @@ stages:
     gamma: 0.5
 
   data_params:
-    batch_size: 128
+    batch_size: 64
     num_workers: 4
     drop_last: False
 
-    image_size: &image_size 320
+    image_size: &image_size 512
     train_csv: "./csv/train_0.csv"
     valid_csv: "./csv/valid_0.csv"
     root: "/raid/data/kaggle/recursion-cellular-image-classification/"
@@ -53,6 +53,7 @@ stages:
         callback: CriterionCallback
       optimizer:
         callback: OptimizerCallback
+        accumulation_steps: 2
       accuracy:
         callback: AccuracyCallback
         accuracy_args: [1]
