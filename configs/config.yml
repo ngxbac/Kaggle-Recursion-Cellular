@@ -22,14 +22,16 @@ stages:
     criterion: CrossEntropyLoss
 
   optimizer_params:
-    optimizer: Adam
-    lr: 0.0003
-    weight_decay: 0.0001
+    optimizer: AdamW
+    lr: 0.0001
+#    weight_decay: 0.0001
 
   scheduler_params:
-    scheduler: MultiStepLR
-    milestones: [25, 30, 40]
-    gamma: 0.5
+    scheduler: OneCycleLR
+    num_steps: &num_epochs 30
+    lr_range: [0.0005, 0.00001]
+    warmup_steps: 5
+    momentum_range: [0.85, 0.95]
 
   data_params:
     batch_size: 64
@@ -46,7 +48,7 @@ stages:
   stage1:
 
     state_params:
-      num_epochs: 45
+      num_epochs: *num_epochs
 
     callbacks_params: &callback_params
       loss:
