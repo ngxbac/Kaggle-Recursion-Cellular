@@ -74,6 +74,43 @@ def image_path(dataset,
                         "{}_s{}_w{}.png".format(address, site, channel))
 
 
+def image_stats(pixel_stat,
+               experiment,
+               plate,
+               address,
+               site,
+               channel):
+    """
+    Returns the path of a channel image.
+    Parameters
+    ----------
+    dataset : str
+        what subset of the data: train, test
+    experiment : str
+        experiment name
+    plate : int
+        plate number
+    address : str
+        plate address
+    site : int
+        site number
+    channel : int
+        channel number
+    base_path : str
+        the base path of the raw images
+    Returns
+    -------
+    str the path of image
+    """
+
+    channel_stat = pixel_stat[(pixel_stat.experiment == experiment)
+               & (pixel_stat.plate == plate)
+               & (pixel_stat.well == address)
+               & (pixel_stat.site == site)
+               & (pixel_stat.channel == channel)]
+
+    return channel_stat["mean"].values[0], channel_stat["std"].values[0]
+
 # def load_image(image_path):
 #     with tf.io.gfile.GFile(image_path, 'rb') as f:
 #         return imread(f, format='png')
@@ -123,6 +160,21 @@ def convert_tensor_to_rgb(t, channels=DEFAULT_CHANNELS, vmax=255, rgb_map=RGB_MA
     return im
 
 
+def normalize(img, mean, std, max_pixel_value=255.0):
+    mean = np.array(mean, dtype=np.float32)
+    mean *= max_pixel_value
+
+    std = np.array(std, dtype=np.float32)
+    std *= max_pixel_value
+
+    denominator = np.reciprocal(std, dtype=np.float32)
+
+    img = img.astype(np.float32)
+    img -= mean
+    img *= denominator
+    return img
+
+
 class RecursionCellularSite(Dataset):
 
     def __init__(self,
@@ -134,6 +186,33 @@ class RecursionCellularSite(Dataset):
                  channels=[1, 2, 3, 4, 5, 6],
                  ):
         df = pd.read_csv(csv_file, nrows=None)
+        self.pixel_stat = pd.read_csv(os.path.join(root, "pixel_stats.csv"))
+        self.stat_dict = {}
+        for experiment, plate, well, site, channel, mean, std in zip(self.pixel_stat.experiment,
+                                                                   self.pixel_stat.plate,
+                                                                   self.pixel_stat.well,
+                                                                   self.pixel_stat.site,
+                                                                   self.pixel_stat.channel,
+                                                                   self.pixel_stat["mean"],
+                                                                   self.pixel_stat["std"]):
+            if not experiment in self.stat_dict:
+                self.stat_dict[experiment] = {}
+
+            if not plate in self.stat_dict[experiment]:
+                self.stat_dict[experiment][plate] = {}
+
+            if not well in self.stat_dict[experiment][plate]:
+                self.stat_dict[experiment][plate][well] = {}
+
+            if not site in self.stat_dict[experiment][plate][well]:
+                self.stat_dict[experiment][plate][well][site] = {}
+
+            if not channel in self.stat_dict[experiment][plate][well][site]:
+                self.stat_dict[experiment][plate][well][channel] = {}
+
+            self.stat_dict[experiment][plate][well][channel]["mean"] = mean / 255
+            self.stat_dict[experiment][plate][well][channel]["std"] = std / 255
+
 
         self.transform = transform
         self.mode = mode
@@ -172,11 +251,22 @@ class RecursionCellularSite(Dataset):
             ) for channel in self.channels
         ]
 
+        std_arr = []
+        mean_arr = []
+
+        for channel in self.channels:
+            mean = self.stat_dict[experiment][plate][well][channel]["mean"]
+            std = self.stat_dict[experiment][plate][well][channel]["std"]
+            std_arr.append(std)
+            mean_arr.append(mean)
+
         image = load_images_as_tensor(channel_paths, dtype=np.float32)
         # image = convert_tensor_to_rgb(image)
-        image = image / 255
+        # image = image / 255
         if self.transform:
             image = self.transform(image=image)['image']
+
+        image = normalize(image, std=std_arr, mean=mean_arr, max_pixel_value=255)
         image = np.transpose(image, (2, 0, 1)).astype(np.float32)
 
         if self.mode == 'train':
