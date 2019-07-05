@@ -19,7 +19,8 @@ stages:
     minimize_metric: False
 
   criterion_params:
-    criterion: CrossEntropyLoss
+#    criterion: CrossEntropyLoss
+    criterion: LabelSmoothingCrossEntropy
 
   optimizer_params:
     optimizer: AdamW
@@ -52,7 +53,8 @@ stages:
 
     callbacks_params: &callback_params
       loss:
-        callback: CriterionCallback
+#        callback: CriterionCallback
+        callback: LabelSmoothCriterionCallback
       optimizer:
         callback: OptimizerCallback
         accumulation_steps: 2
