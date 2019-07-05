@@ -4,7 +4,7 @@ export CUDA_VISIBLE_DEVICES=2,3
 RUN_CONFIG=config.yml
 
 
-LOGDIR=/raid/bac/kaggle/logs/recursion_cell/test/rgb_no_crop_512_accum2/se_resnext50_32x4d/
+LOGDIR=/raid/bac/kaggle/logs/recursion_cell/test/c123_s1/se_resnext50_32x4d/
 catalyst-dl run \
     --config=./configs/${RUN_CONFIG} \
     --logdir=$LOGDIR \

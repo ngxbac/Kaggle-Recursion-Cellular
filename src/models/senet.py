@@ -1,6 +1,7 @@
 import torch.nn as nn
 import pretrainedmodels
 from cnn_finetune import make_model
+from .utils import *
 
 
 def cell_senet(model_name='se_resnext50', num_classes=1108, n_channels=6):
@@ -8,7 +9,9 @@ def cell_senet(model_name='se_resnext50', num_classes=1108, n_channels=6):
     model = make_model(
         model_name=model_name,
         num_classes=num_classes,
-        pretrained=True
+        pretrained=True,
+        # pool=GlobalConcatPool2d(),
+        # classifier_factory=make_classifier
     )
     # print(model)
     conv1 = model._features[0].conv1

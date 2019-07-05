@@ -262,11 +262,11 @@ class RecursionCellularSite(Dataset):
 
         image = load_images_as_tensor(channel_paths, dtype=np.float32)
         # image = convert_tensor_to_rgb(image)
-        # image = image / 255
+        image = image / 255
         if self.transform:
             image = self.transform(image=image)['image']
 
-        image = normalize(image, std=std_arr, mean=mean_arr, max_pixel_value=255)
+        # image = normalize(image, std=std_arr, mean=mean_arr, max_pixel_value=255)
         image = np.transpose(image, (2, 0, 1)).astype(np.float32)
 
         if self.mode == 'train':

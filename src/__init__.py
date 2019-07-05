@@ -5,12 +5,19 @@ from .runner import ModelRunner as Runner
 from models import *
 from losses import *
 from callbacks import *
+from optimizers import *
 
 
+# Register models
 registry.Model(cell_resnet)
 registry.Model(cell_senet)
 registry.Model(cell_densenet)
 
+# Register callbacks
 registry.Callback(LabelSmoothCriterionCallback)
 
+# Register criterions
 registry.Criterion(LabelSmoothingCrossEntropy)
+
+# Register optimizers
+registry.Optimizer(AdamW)
