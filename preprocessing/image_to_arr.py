@@ -32,7 +32,7 @@ def image_path(dataset,
     address : str
         plate address
     site : int
-        site number
+        sites number
     channel : int
         channel number
     base_path : str

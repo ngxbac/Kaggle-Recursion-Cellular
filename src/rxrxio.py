@@ -74,7 +74,7 @@ def convert_tensor_to_rgb(t, channels=DEFAULT_CHANNELS, vmax=255, rgb_map=RGB_MA
         See rxrx.io.RGB_MAP to see what the defaults are.
     Returns
     -------
-    np.ndarray the image data of the site as RGB channels
+    np.ndarray the image data of the sites as RGB channels
     """
     colored_channels = []
     for i, channel in enumerate(channels):
@@ -111,7 +111,7 @@ def image_path(dataset,
     address : str
         plate address
     site : int
-        site number
+        sites number
     channel : int
         channel number
     base_path : str
@@ -132,7 +132,7 @@ def load_site(dataset,
               channels=DEFAULT_CHANNELS,
               base_path=DEFAULT_IMAGES_BASE_PATH):
     """
-    Returns the image data of a site
+    Returns the image data of a sites
     Parameters
     ----------
     dataset : str
@@ -144,14 +144,14 @@ def load_site(dataset,
     address : str
         plate address
     site : int
-        site number
+        sites number
     channels : list of int
         channels to include
     base_path : str
         the base path of the raw images
     Returns
     -------
-    np.ndarray the image data of the site
+    np.ndarray the image data of the sites
     """
     channel_paths = [
         image_path(
@@ -182,7 +182,7 @@ def load_site_as_rgb(dataset,
     address : str
         plate address
     site : int
-        site number
+        sites number
     channels : list of int
         channels to include
     base_path : str
@@ -192,7 +192,7 @@ def load_site_as_rgb(dataset,
         See rxrx.io.RGB_MAP to see what the defaults are.
     Returns
     -------
-    np.ndarray the image data of the site as RGB channels
+    np.ndarray the image data of the sites as RGB channels
     """
     x = load_site(dataset, experiment, plate, well, site, channels, base_path)
     return convert_tensor_to_rgb(x, channels, rgb_map=rgb_map)
@@ -215,10 +215,10 @@ def _load_dataset(base_path, dataset, include_controls=True):
     dfs = []
     for site in (1, 2):
         df = df.copy()
-        df['site'] = site
+        df['sites'] = site
         dfs.append(df)
     res = pd.concat(dfs).sort_values(
-        by=['id_code', 'site']).set_index('id_code')
+        by=['id_code', 'sites']).set_index('id_code')
     return res
 
 

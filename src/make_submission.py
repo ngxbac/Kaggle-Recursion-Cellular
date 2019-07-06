@@ -35,15 +35,15 @@ def predict(model, loader):
 def predict_all():
     test_csv = '/raid/data/kaggle/recursion-cellular-image-classification/test.csv'
     # test_csv = './csv/valid_0.csv'
-    log_dir = "/raid/bac/kaggle/logs/recursion_cell/test/c123_s1_1cycle_adamw_norm_per_channel_smooth/se_resnext50_32x4d/"
+    log_dir = "/raid/bac/kaggle/logs/recursion_cell/test/c123_s1_1cycle_adamw_norm_per_channel_smooth_reprocedure/se_resnext50_32x4d/"
     root = "/raid/data/kaggle/recursion-cellular-image-classification/"
-    site = 1
+    sites = [1]
     channels = [1,2,3]
 
     model = cell_senet(
         model_name="se_resnext50_32x4d",
         num_classes=1108,
-        n_channels=len(channels)
+        n_channels=len(channels) * len(sites)
     )
 
     checkpoint = f"{log_dir}/checkpoints/best.pth"
@@ -57,7 +57,7 @@ def predict_all():
         root=root,
         transform=valid_aug(512),
         mode='test',
-        site=site,
+        sites=sites,
         channels=channels
     )
 
@@ -75,8 +75,8 @@ def predict_all():
     submission = df.copy()
     submission['sirna'] = all_preds.astype(int)
     os.makedirs("submission", exist_ok=True)
-    submission.to_csv('./submission/se_resnext50_32x4d_c123_s1_1cycle_adamw_norm_per_channel_smooth.csv', index=False, columns=['id_code', 'sirna'])
-    np.save("./submission/se_resnext50_32x4d_c123_s1_1cycle_adamw_norm_per_channel_smooth.npy", pred)
+    submission.to_csv('./submission/se_resnext50_c123_s1_1cycle_adamw_norm_per_channel_smooth_reprocedure.csv', index=False, columns=['id_code', 'sirna'])
+    np.save("./submission/se_resnext50_c123_s1_1cycle_adamw_norm_per_channel_smooth_reprocedure.npy", pred)
 
 
 if __name__ == '__main__':

@@ -61,7 +61,7 @@ def image_path(dataset,
     address : str
         plate address
     site : int
-        site number
+        sites number
     channel : int
         channel number
     base_path : str
@@ -93,7 +93,7 @@ def image_stats(pixel_stat,
     address : str
         plate address
     site : int
-        site number
+        sites number
     channel : int
         channel number
     base_path : str
@@ -143,7 +143,7 @@ def convert_tensor_to_rgb(t, channels=DEFAULT_CHANNELS, vmax=255, rgb_map=RGB_MA
         See rxrx.io.RGB_MAP to see what the defaults are.
     Returns
     -------
-    np.ndarray the image data of the site as RGB channels
+    np.ndarray the image data of the sites as RGB channels
     """
     colored_channels = []
     for i, channel in enumerate(channels):
@@ -181,10 +181,12 @@ class RecursionCellularSite(Dataset):
                  csv_file,
                  root,
                  transform,
-                 site=1,
+                 sites=[1],
                  mode='train',
                  channels=[1, 2, 3, 4, 5, 6],
                  ):
+        print("Channels ", channels)
+        print("sites ", sites)
         df = pd.read_csv(csv_file, nrows=None)
         self.pixel_stat = pd.read_csv(os.path.join(root, "pixel_stats.csv"))
         self.stat_dict = {}
@@ -208,16 +210,16 @@ class RecursionCellularSite(Dataset):
                 self.stat_dict[experiment][plate][well][site] = {}
 
             if not channel in self.stat_dict[experiment][plate][well][site]:
-                self.stat_dict[experiment][plate][well][channel] = {}
+                self.stat_dict[experiment][plate][well][site][channel] = {}
 
-            self.stat_dict[experiment][plate][well][channel]["mean"] = mean / 255
-            self.stat_dict[experiment][plate][well][channel]["std"] = std / 255
+            self.stat_dict[experiment][plate][well][site][channel]["mean"] = mean / 255
+            self.stat_dict[experiment][plate][well][site][channel]["std"] = std / 255
 
 
         self.transform = transform
         self.mode = mode
         self.channels = channels
-        self.site = site
+        self.sites = sites
 
         self.experiments = df['experiment'].values
         self.plates = df['plate'].values
@@ -239,26 +241,30 @@ class RecursionCellularSite(Dataset):
         plate = self.plates[idx]
         well = self.wells[idx]
 
-        channel_paths = [
-            image_path(
-                dataset=self.mode,
-                experiment=experiment,
-                plate=plate,
-                address=well,
-                channel=channel,
-                site=self.site,
-                base_path=self.root,
-            ) for channel in self.channels
-        ]
+        channel_paths = []
+
+        for site in self.sites:
+            for channel in self.channels:
+                path = image_path(
+                    dataset=self.mode,
+                    experiment=experiment,
+                    plate=plate,
+                    address=well,
+                    channel=channel,
+                    site=site,
+                    base_path=self.root,
+                )
+                channel_paths.append(path)
 
         std_arr = []
         mean_arr = []
 
-        for channel in self.channels:
-            mean = self.stat_dict[experiment][plate][well][channel]["mean"]
-            std = self.stat_dict[experiment][plate][well][channel]["std"]
-            std_arr.append(std)
-            mean_arr.append(mean)
+        for site in self.sites:
+            for channel in self.channels:
+                mean = self.stat_dict[experiment][plate][well][site][channel]["mean"]
+                std = self.stat_dict[experiment][plate][well][site][channel]["std"]
+                std_arr.append(std)
+                mean_arr.append(mean)
 
         image = load_images_as_tensor(channel_paths, dtype=np.float32)
         # image = convert_tensor_to_rgb(image)

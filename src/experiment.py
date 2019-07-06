@@ -34,7 +34,7 @@ class Experiment(ConfigExperiment):
         image_size = kwargs.get("image_size", 320)
         train_csv = kwargs.get('train_csv', None)
         valid_csv = kwargs.get('valid_csv', None)
-        site = kwargs.get('site', 1)
+        sites = kwargs.get('sites', [1])
         channels = kwargs.get('channels', [1, 2, 3, 4, 5, 6])
         root = kwargs.get('root', None)
 
@@ -45,7 +45,7 @@ class Experiment(ConfigExperiment):
                 root=root,
                 transform=transform,
                 mode='train',
-                site=site,
+                sites=sites,
                 channels=channels
             )
             datasets["train"] = train_set
@@ -57,7 +57,7 @@ class Experiment(ConfigExperiment):
                 root=root,
                 transform=transform,
                 mode='train',
-                site=site,
+                sites=sites,
                 channels=channels
             )
             datasets["valid"] = valid_set
