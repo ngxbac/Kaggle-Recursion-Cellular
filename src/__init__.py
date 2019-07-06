@@ -15,6 +15,7 @@ registry.Model(cell_densenet)
 
 # Register callbacks
 registry.Callback(LabelSmoothCriterionCallback)
+registry.Callback(SmoothMixupCallback)
 
 # Register criterions
 registry.Criterion(LabelSmoothingCrossEntropy)
