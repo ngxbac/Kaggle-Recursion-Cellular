@@ -225,7 +225,7 @@ class RecursionCellularSite(Dataset):
         self.plates = df['plate'].values
         self.wells = df['well'].values
 
-        if mode == 'train':
+        if mode != 'test':
             self.labels = df['sirna'].values
         else:
             self.labels = [0] * len(self.experiments)
@@ -243,7 +243,15 @@ class RecursionCellularSite(Dataset):
 
         channel_paths = []
 
-        for site in self.sites:
+        if self.mode == 'train':
+            if np.random.rand() < 0.5:
+                sites = [1]
+            else:
+                sites = [2]
+        else:
+            sites = self.sites
+
+        for site in sites:
             for channel in self.channels:
                 path = image_path(
                     dataset=self.mode,
@@ -259,7 +267,7 @@ class RecursionCellularSite(Dataset):
         std_arr = []
         mean_arr = []
 
-        for site in self.sites:
+        for site in sites:
             for channel in self.channels:
                 mean = self.stat_dict[experiment][plate][well][site][channel]["mean"]
                 std = self.stat_dict[experiment][plate][well][site][channel]["std"]

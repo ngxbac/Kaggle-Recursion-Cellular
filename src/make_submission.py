@@ -36,12 +36,12 @@ def predict_all():
     test_csv = '/raid/data/kaggle/recursion-cellular-image-classification/test.csv'
     # test_csv = './csv/valid_0.csv'
 
-    experiment = 'c123_s12_smooth_nadam_'
+    experiment = 'c123_s1_smooth_nadam_rndsite'
     model_name = 'se_resnext50_32x4d'
 
     log_dir = f"/raid/bac/kaggle/logs/recursion_cell/test/{experiment}/{model_name}/"
     root = "/raid/data/kaggle/recursion-cellular-image-classification/"
-    sites = [1, 2]
+    sites = [1]
     channels = [1,2,3]
 
     model = cell_senet(
@@ -55,26 +55,31 @@ def predict_all():
     model.load_state_dict(checkpoint['model_state_dict'])
     model = model.to(device)
 
-    # Dataset
-    dataset = RecursionCellularSite(
-        csv_file=test_csv,
-        root=root,
-        transform=valid_aug(512),
-        mode='test',
-        sites=sites,
-        channels=channels
-    )
+    preds = []
 
-    loader = DataLoader(
-        dataset=dataset,
-        batch_size=128,
-        shuffle=False,
-        num_workers=4,
-    )
+    for site in [1, 2]:
+        # Dataset
+        dataset = RecursionCellularSite(
+            csv_file=test_csv,
+            root=root,
+            transform=valid_aug(512),
+            mode='test',
+            sites=[site],
+            channels=channels
+        )
 
-    pred = predict(model, loader)
+        loader = DataLoader(
+            dataset=dataset,
+            batch_size=128,
+            shuffle=False,
+            num_workers=4,
+        )
 
-    all_preds = np.argmax(pred, axis=1)
+        pred = predict(model, loader)
+        preds.append(pred)
+
+    preds = np.asarray(preds).mean(axis=0)
+    all_preds = np.argmax(preds, axis=1)
     df = pd.read_csv(test_csv)
     submission = df.copy()
     submission['sirna'] = all_preds.astype(int)

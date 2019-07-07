@@ -1,7 +1,7 @@
 model_params:
   model: cell_senet
   model_name: se_resnext50_32x4d
-  n_channels: 6
+  n_channels: 3
   num_classes: 1108
 
 args:
@@ -43,7 +43,7 @@ stages:
     train_csv: "./csv/train_0.csv"
     valid_csv: "./csv/valid_0.csv"
     root: "/raid/data/kaggle/recursion-cellular-image-classification/"
-    sites: [1, 2]
+    sites: [1]
     channels: [1, 2, 3]
 
   stage1:
