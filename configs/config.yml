@@ -1,7 +1,7 @@
 model_params:
   model: cell_senet
   model_name: se_resnext50_32x4d
-  n_channels: 3
+  n_channels: 6
   num_classes: 1108
 
 args:
@@ -23,7 +23,7 @@ stages:
     criterion: LabelSmoothingCrossEntropy
 
   optimizer_params:
-    optimizer: AdamW
+    optimizer: Nadam
     lr: 0.0001
 #    weight_decay: 0.0001
 
@@ -36,14 +36,14 @@ stages:
 
   data_params:
     batch_size: 64
-    num_workers: 4
+    num_workers: 8
     drop_last: False
 
     image_size: &image_size 512
     train_csv: "./csv/train_0.csv"
     valid_csv: "./csv/valid_0.csv"
     root: "/raid/data/kaggle/recursion-cellular-image-classification/"
-    sites: [1]
+    sites: [1, 2]
     channels: [1, 2, 3]
 
   stage1:

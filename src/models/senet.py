@@ -4,8 +4,32 @@ from cnn_finetune import make_model
 from .utils import *
 
 
-def cell_senet(model_name='se_resnext50', num_classes=1108, n_channels=6):
-    # model = pretrainedmodels.__dict__[model_name](num_classes=1000, pretrained='imagenet')
+class SENet(nn.Module):
+    def __init__(self,  model_name="se_resnext50_32x4d",
+                        num_classes=1108,
+                        n_channels=6):
+        super(SENet, self).__init__()
+
+        self.model = make_model(
+            model_name=model_name,
+            num_classes=num_classes,
+            pretrained=True,
+            # pool=GlobalConcatPool2d(),
+            # classifier_factory=make_classifier
+        )
+        self.conv = Conv2dSame(
+            in_channels=n_channels,
+            out_channels=3,
+            kernel_size=1,
+            stride=1,
+        )
+
+    def forward(self, x):
+        x = self.conv(x)
+        return self.model(x)
+
+
+def cell_senet(model_name='se_resnext50_32x4d', num_classes=1108, n_channels=6):
     model = make_model(
         model_name=model_name,
         num_classes=num_classes,
@@ -25,4 +49,12 @@ def cell_senet(model_name='se_resnext50', num_classes=1108, n_channels=6):
     # copy pretrained weights
     model._features[0].conv1.weight.data[:,:3,:,:] = conv1.weight.data
     model._features[0].conv1.weight.data[:,3:n_channels,:,:] = conv1.weight.data[:,:int(n_channels-3),:,:]
+    # model = SENet(
+    #     model_name=model_name,
+    #     num_classes=num_classes,
+    #     n_channels=n_channels
+    # )
+    #
+    # for param in model.parameters():
+    #     param.requires_grad = True
     return model
