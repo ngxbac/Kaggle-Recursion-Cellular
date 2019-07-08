@@ -1,7 +1,7 @@
 model_params:
   model: cell_senet
   model_name: se_resnext50_32x4d
-  n_channels: 3
+  n_channels: 4
   num_classes: 1108
 
 args:
@@ -35,7 +35,7 @@ stages:
     momentum_range: [0.85, 0.95]
 
   data_params:
-    batch_size: 64
+    batch_size: 32
     num_workers: 8
     drop_last: False
 
@@ -44,7 +44,7 @@ stages:
     valid_csv: "./csv/valid_0.csv"
     root: "/raid/data/kaggle/recursion-cellular-image-classification/"
     sites: [1]
-    channels: [1, 2, 3]
+    channels: [1, 2, 3, 4]
 
   stage1:
 
@@ -57,7 +57,7 @@ stages:
         callback: LabelSmoothCriterionCallback
       optimizer:
         callback: OptimizerCallback
-        accumulation_steps: 2
+        accumulation_steps: 4
       accuracy:
         callback: AccuracyCallback
         accuracy_args: [1]

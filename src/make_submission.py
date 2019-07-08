@@ -36,13 +36,13 @@ def predict_all():
     test_csv = '/raid/data/kaggle/recursion-cellular-image-classification/test.csv'
     # test_csv = './csv/valid_0.csv'
 
-    experiment = 'c123_s1_smooth_nadam_rndsite'
+    experiment = 'c1234_s1_smooth_nadam_rndsite'
     model_name = 'se_resnext50_32x4d'
 
     log_dir = f"/raid/bac/kaggle/logs/recursion_cell/test/{experiment}/{model_name}/"
     root = "/raid/data/kaggle/recursion-cellular-image-classification/"
     sites = [1]
-    channels = [1,2,3]
+    channels = [1,2,3,4]
 
     model = cell_senet(
         model_name="se_resnext50_32x4d",
