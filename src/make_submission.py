@@ -39,15 +39,16 @@ def predict_all():
     experiment = 'c1234_s1_smooth_nadam_rndsite'
     model_name = 'se_resnext50_32x4d'
 
-    log_dir = f"/raid/bac/kaggle/logs/recursion_cell/test/{experiment}/{model_name}/"
+    log_dir = f"/raid/bac/kaggle/logs/recursion_cell/test_from_hpa/{experiment}/{model_name}/"
     root = "/raid/data/kaggle/recursion-cellular-image-classification/"
     sites = [1]
     channels = [1,2,3,4]
 
-    model = cell_senet(
+    model = hpa_cell_senet(
         model_name="se_resnext50_32x4d",
         num_classes=1108,
-        n_channels=len(channels) * len(sites)
+        n_channels=len(channels) * len(sites),
+        pretrained="/raid/bac/kaggle/logs/recursion_cell/hpa/se_resnext50_32x4d/checkpoints/best.pth"
     )
 
     checkpoint = f"{log_dir}/checkpoints/best.pth"
@@ -84,7 +85,7 @@ def predict_all():
     submission = df.copy()
     submission['sirna'] = all_preds.astype(int)
     os.makedirs("submission", exist_ok=True)
-    submission.to_csv(f'./submission/{model_name}_{experiment}.csv', index=False, columns=['id_code', 'sirna'])
+    submission.to_csv(f'./submission/{model_name}_{experiment}_hpa.csv', index=False, columns=['id_code', 'sirna'])
     np.save(f"./submission/{model_name}_{experiment}.npy", pred)
 
 

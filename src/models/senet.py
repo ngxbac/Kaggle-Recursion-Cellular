@@ -1,3 +1,4 @@
+import torch
 import torch.nn as nn
 import pretrainedmodels
 from cnn_finetune import make_model
@@ -57,4 +58,19 @@ def cell_senet(model_name='se_resnext50_32x4d', num_classes=1108, n_channels=6):
     #
     # for param in model.parameters():
     #     param.requires_grad = True
+    return model
+
+
+def hpa_cell_senet(model_name='se_resnext50_32x4d', num_classes=1108, n_channels=6, pretrained=None):
+    model = cell_senet(model_name=model_name, num_classes=28, n_channels=n_channels)
+    if pretrained:
+        checkpoint = torch.load(pretrained)
+        model.load_state_dict(checkpoint['model_state_dict'])
+        print("Loaded checkpoint: ", pretrained)
+
+    in_features = model._classifier.in_features
+    model._classifier = nn.Linear(
+        in_features=in_features,
+        out_features=num_classes
+    )
     return model

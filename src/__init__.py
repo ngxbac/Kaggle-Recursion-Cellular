@@ -11,6 +11,7 @@ from optimizers import *
 # Register models
 registry.Model(cell_resnet)
 registry.Model(cell_senet)
+registry.Model(hpa_cell_senet)
 registry.Model(cell_densenet)
 
 # Register callbacks
