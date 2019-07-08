@@ -62,4 +62,29 @@ class Experiment(ConfigExperiment):
             )
             datasets["valid"] = valid_set
 
+        train_hpa_csv = kwargs.get('train_hpa_csv', None)
+        valid_hpa_csv = kwargs.get('valid_hpa_csv', None)
+
+        if train_hpa_csv:
+            transform = train_aug(image_size)
+            train_set = ProteinDataset(
+                root=root,
+                root_hpa=None,
+                df=train_hpa_csv,
+                transform=transform,
+                mode='train',
+            )
+            datasets["train"] = train_set
+
+        if valid_hpa_csv:
+            transform = valid_aug(image_size)
+            valid_set = ProteinDataset(
+                root=root,
+                root_hpa=None,
+                df=valid_hpa_csv,
+                transform=transform,
+                mode='train',
+            )
+            datasets["valid"] = valid_set
+
         return datasets

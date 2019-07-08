@@ -292,3 +292,85 @@ class RecursionCellularSite(Dataset):
             "images": image,
             "targets": label
         }
+
+
+from sklearn.preprocessing import MultiLabelBinarizer
+MEAN = [0.08069, 0.05258, 0.05487, 0.08282]
+STD = [0.13704, 0.10145, 0.15313, 0.13814]
+classes = [
+    '0', '1', '2', '3', '4', '5', '6',
+    '7', '8', '9', '10', '11', '12', '13',
+    '14', '15', '16', '17', '18', '19', '20',
+    '21', '22', '23', '24', '25', '26', '27'
+]
+
+
+def load_image_hpa(path):
+    image_red_ch = cv2.imread(path + '_red.png', 0)
+    image_green_ch = cv2.imread(path + '_green.png', 0)
+    image_blue_ch = cv2.imread(path + '_blue.png', 0)
+    image_yellow_ch = cv2.imread(path + '_yellow.png', 0)
+
+    # RGBY image
+    image = cv2.merge((
+        image_red_ch,
+        image_green_ch,
+        image_blue_ch,
+        image_yellow_ch,
+    ))
+
+    return image / 255
+
+
+class ProteinDataset(Dataset):
+    def __init__(self, root, root_hpa, df, transform=None, mode="train"):
+        df = pd.read_csv(df)
+        self.root = root
+        self.root_hpa = root_hpa
+        self.ids = df["Id"].values
+        if "is_external" in df.columns.values:
+            self.is_external = df["is_external"].values
+        else:
+            self.is_external = [False] * len(df)
+
+        self.mlb = MultiLabelBinarizer()
+        if mode == "train":
+            self.mlb.classes_ = classes
+            self.labels = self.mlb.transform(df['Target'].str.split()).astype(np.float32)
+            print(self.mlb.classes_)
+
+        self.mode = mode
+        self.transform = transform
+
+    def __len__(self):
+        return self.ids.shape[0]
+
+    def __getitem__(self, idx):
+        id = self.ids[idx]
+        is_external = self.is_external[idx]
+        if is_external:
+            path = os.path.join(self.root_hpa, id)
+        else:
+            path = os.path.join(self.root, id)
+        image = load_image_hpa(path)
+
+        if self.transform:
+            image = self.transform(image=image)["image"]
+
+            # Normalize per channel
+            mean = np.mean(image.reshape(-1, 4), axis=0)
+            std = np.std(image.reshape(-1, 4), axis=0)
+            image -= mean
+            image /= (std + 0.0000001)
+
+            image = np.transpose(image, (2, 0, 1)).astype(np.float32)
+
+        if self.mode == "train":
+            label = self.labels[idx]
+        else:
+            label = np.asarray([0] * 28)
+
+        return {
+            "images": image,
+            "targets": label,
+        }
