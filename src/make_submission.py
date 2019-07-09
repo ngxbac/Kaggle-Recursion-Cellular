@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 
 import torch
+import torch.nn as nn
 import torch.nn.functional as Ftorch
 from torch.utils.data import DataLoader
 import os
@@ -36,7 +37,7 @@ def predict_all():
     test_csv = '/raid/data/kaggle/recursion-cellular-image-classification/test.csv'
     # test_csv = './csv/valid_0.csv'
 
-    experiment = 'c1234_s1_smooth_nadam_rndsite'
+    experiment = 'c1234_s1_smooth_nadam_rndsite_64'
     model_name = 'se_resnext50_32x4d'
 
     log_dir = f"/raid/bac/kaggle/logs/recursion_cell/test/{experiment}/{model_name}/"
@@ -44,6 +45,7 @@ def predict_all():
     sites = [1]
     channels = [1,2,3,4]
 
+    preds = []
     model = cell_senet(
         model_name="se_resnext50_32x4d",
         num_classes=1108,
@@ -54,8 +56,7 @@ def predict_all():
     checkpoint = torch.load(checkpoint)
     model.load_state_dict(checkpoint['model_state_dict'])
     model = model.to(device)
-
-    preds = []
+    model = nn.DataParallel(model)
 
     for site in [1, 2]:
         # Dataset
@@ -84,8 +85,8 @@ def predict_all():
     submission = df.copy()
     submission['sirna'] = all_preds.astype(int)
     os.makedirs("submission", exist_ok=True)
-    submission.to_csv(f'./submission/{model_name}_{experiment}.csv', index=False, columns=['id_code', 'sirna'])
-    np.save(f"./submission/{model_name}_{experiment}.npy", pred)
+    submission.to_csv(f'./submission/{model_name}_{experiment}_3ckps.csv', index=False, columns=['id_code', 'sirna'])
+    np.save(f"./submission/{model_name}_{experiment}_3ckps.npy", preds)
 
 
 if __name__ == '__main__':

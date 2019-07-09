@@ -35,7 +35,7 @@ stages:
     momentum_range: [0.85, 0.95]
 
   data_params:
-    batch_size: 32
+    batch_size: 64
     num_workers: 8
     drop_last: False
 
@@ -57,7 +57,7 @@ stages:
         callback: LabelSmoothCriterionCallback
       optimizer:
         callback: OptimizerCallback
-        accumulation_steps: 4
+        accumulation_steps: 2
       accuracy:
         callback: AccuracyCallback
         accuracy_args: [1]
