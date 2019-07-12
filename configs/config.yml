@@ -22,18 +22,6 @@ stages:
 #    criterion: CrossEntropyLoss
     criterion: LabelSmoothingCrossEntropy
 
-  optimizer_params:
-    optimizer: Nadam
-    lr: 0.0001
-#    weight_decay: 0.0001
-
-  scheduler_params:
-    scheduler: OneCycleLR
-    num_steps: &num_epochs 30
-    lr_range: [0.0005, 0.00001]
-    warmup_steps: 5
-    momentum_range: [0.85, 0.95]
-
   data_params:
     batch_size: 64
     num_workers: 8
@@ -46,14 +34,23 @@ stages:
     sites: [1]
     channels: [1, 2, 3, 4]
 
-  stage1:
+  stage0:
+
+    optimizer_params:
+      optimizer: Nadam
+      lr: 0.001
+
+    scheduler_params:
+      scheduler: MultiStepLR
+      milestones: [10]
+      gamma: 0.3
 
     state_params:
-      num_epochs: *num_epochs
+      num_epochs: 2
 
     callbacks_params: &callback_params
       loss:
-#        callback: CriterionCallback
+        #        callback: CriterionCallback
         callback: LabelSmoothCriterionCallback
       optimizer:
         callback: OptimizerCallback
@@ -67,14 +64,20 @@ stages:
       saver:
         callback: CheckpointCallback
 
-#  stage2:
-#
-#    state_params:
-#      num_epochs: 9
-#
-#    optimizer_params:
-#      optimizer: Adam
-#      lr: 0.0001
-#      weight_decay: 0.0001
-#
-#    callbacks_params: *callback_params
+  stage1:
+
+    optimizer_params:
+      optimizer: Nadam
+      lr: 0.0001
+
+    scheduler_params:
+      scheduler: OneCycleLR
+      num_steps: &num_epochs 30
+      lr_range: [0.0005, 0.00001]
+      warmup_steps: 5
+      momentum_range: [0.85, 0.95]
+
+    state_params:
+      num_epochs: *num_epochs
+
+    callbacks_params: *callback_params

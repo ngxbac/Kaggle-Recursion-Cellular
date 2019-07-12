@@ -187,6 +187,7 @@ class RecursionCellularSite(Dataset):
                  ):
         print("Channels ", channels)
         print("sites ", sites)
+        print(csv_file)
         df = pd.read_csv(csv_file, nrows=None)
         self.pixel_stat = pd.read_csv(os.path.join(root, "pixel_stats.csv"))
         self.stat_dict = {}
