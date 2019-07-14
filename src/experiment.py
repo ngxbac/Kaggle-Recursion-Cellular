@@ -22,13 +22,22 @@ class Experiment(ConfigExperiment):
             model_ = model_.module
 
         if stage == "stage0":
-            for param in model_._features.parameters():
-                param.requires_grad = False
-            print("Freeze backbone model !!!")
+            if hasattr(model_, 'freeze'):
+                model_.freeze()
+                print("Freeze backbone model !!!")
+            else:
+                for param in model_._features.parameters():
+                    param.requires_grad = False
+                    print("Freeze backbone model !!!")
+
         else:
-            for param in model_._features.parameters():
-                param.requires_grad = True
-            print("Unfreeze backbone model !!!")
+            if hasattr(model_, 'unfreeze'):
+                model_.unfreeze()
+                print("Unfreeze backbone model !!!")
+            else:
+                for param in model_._features.parameters():
+                    param.requires_grad = True
+                    print("Freeze backbone model !!!")
 
         return model_
 

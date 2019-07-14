@@ -34,8 +34,8 @@ def predict(model, loader):
 
 
 def predict_all():
-    test_csv = '/raid/data/kaggle/recursion-cellular-image-classification/test.csv'
-    # test_csv = './csv/valid_0.csv'
+    # test_csv = '/raid/data/kaggle/recursion-cellular-image-classification/test.csv'
+    test_csv = './csv/valid_0.csv'
     model_name = 'se_resnext50_32x4d'
 
     for channel_str in [
@@ -76,7 +76,7 @@ def predict_all():
                 csv_file=test_csv,
                 root=root,
                 transform=valid_aug(512),
-                mode='test',
+                mode='train',
                 sites=[site],
                 channels=channels
             )
@@ -97,8 +97,8 @@ def predict_all():
         submission = df.copy()
         submission['sirna'] = all_preds.astype(int)
         os.makedirs("./prediction/fold_0/", exist_ok=True)
-        submission.to_csv(f'./prediction/fold_0/{model_name}_{channel_str}_test.csv', index=False, columns=['id_code', 'sirna'])
-        np.save(f"./prediction/fold_0/{model_name}_{channel_str}_test.npy", preds)
+        submission.to_csv(f'./prediction/fold_0/{model_name}_{channel_str}_valid.csv', index=False, columns=['id_code', 'sirna'])
+        np.save(f"./prediction/fold_0/{model_name}_{channel_str}_valid.npy", preds)
 
 
 if __name__ == '__main__':

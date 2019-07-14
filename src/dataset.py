@@ -252,6 +252,8 @@ class RecursionCellularSite(Dataset):
         else:
             sites = self.sites
 
+        # sites = self.sites
+
         for site in sites:
             for channel in self.channels:
                 path = image_path(

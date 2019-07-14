@@ -12,6 +12,7 @@ from optimizers import *
 registry.Model(cell_resnet)
 registry.Model(cell_senet)
 registry.Model(cell_densenet)
+registry.Model(EfficientNet)
 
 # Register callbacks
 registry.Callback(LabelSmoothCriterionCallback)
