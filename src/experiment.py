@@ -56,7 +56,7 @@ class Experiment(ConfigExperiment):
         dataset_name = dataset_params.get('dataset_name', 'RecursionCellularSite')
         dataset_func = getattr(cell_dataset, dataset_name)
 
-        image_size = dataset_params.get("image_size", 320)
+        image_size = kwargs.get("image_size", 320)
         train_csv = dataset_params.get('train_csv', None)
         valid_csv = dataset_params.get('valid_csv', None)
         sites = dataset_params.get('sites', [1])

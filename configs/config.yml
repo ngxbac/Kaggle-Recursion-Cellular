@@ -29,7 +29,7 @@ stages:
 
     image_size: &image_size 512
     dataset_params:
-      dataset_name: RecursionCellularOptimalChannel
+      dataset_name: RecursionCellularBase
       train_csv: "./csv/train_0.csv"
       valid_csv: "./csv/valid_0.csv"
       root: "/raid/data/kaggle/recursion-cellular-image-classification/"
