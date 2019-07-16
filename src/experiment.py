@@ -28,7 +28,7 @@ class Experiment(ConfigExperiment):
             else:
                 for param in model_._features.parameters():
                     param.requires_grad = False
-                    print("Freeze backbone model !!!")
+                print("Freeze backbone model !!!")
 
         else:
             if hasattr(model_, 'unfreeze'):
@@ -37,7 +37,7 @@ class Experiment(ConfigExperiment):
             else:
                 for param in model_._features.parameters():
                     param.requires_grad = True
-                    print("Freeze backbone model !!!")
+                print("Freeze backbone model !!!")
 
         return model_
 
@@ -58,7 +58,7 @@ class Experiment(ConfigExperiment):
 
         if train_csv:
             transform = train_aug(image_size)
-            train_set = RecursionCellularSite(
+            train_set = RecursionCellularWithPos(
                 csv_file=train_csv,
                 root=root,
                 transform=transform,
@@ -70,7 +70,7 @@ class Experiment(ConfigExperiment):
 
         if valid_csv:
             transform = valid_aug(image_size)
-            valid_set = RecursionCellularSite(
+            valid_set = RecursionCellularWithPos(
                 csv_file=valid_csv,
                 root=root,
                 transform=transform,

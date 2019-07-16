@@ -13,6 +13,7 @@ registry.Model(ResNet)
 registry.Model(cell_senet)
 registry.Model(cell_densenet)
 registry.Model(EfficientNet)
+registry.Model(SENet)
 
 # Register callbacks
 registry.Callback(LabelSmoothCriterionCallback)
