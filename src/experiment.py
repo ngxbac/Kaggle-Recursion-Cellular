@@ -1,9 +1,10 @@
 from collections import OrderedDict
+import numpy as np
 import torch
 import torch.nn as nn
 import random
 from catalyst.dl.experiment import ConfigExperiment
-from dataset import *
+import dataset as cell_dataset
 from augmentation import train_aug, valid_aug
 
 
@@ -37,7 +38,7 @@ class Experiment(ConfigExperiment):
             else:
                 for param in model_._features.parameters():
                     param.requires_grad = True
-                print("Freeze backbone model !!!")
+                print("Unfreeze backbone model !!!")
 
         return model_
 
@@ -49,16 +50,22 @@ class Experiment(ConfigExperiment):
         label_key: 'attribute_ids'
         """
 
-        image_size = kwargs.get("image_size", 320)
-        train_csv = kwargs.get('train_csv', None)
-        valid_csv = kwargs.get('valid_csv', None)
-        sites = kwargs.get('sites', [1])
-        channels = kwargs.get('channels', [1, 2, 3, 4, 5, 6])
-        root = kwargs.get('root', None)
+        dataset_params = kwargs.get('dataset_params', None)
+        assert dataset_params is not None
+
+        dataset_name = dataset_params.get('dataset_name', 'RecursionCellularSite')
+        dataset_func = getattr(cell_dataset, dataset_name)
+
+        image_size = dataset_params.get("image_size", 320)
+        train_csv = dataset_params.get('train_csv', None)
+        valid_csv = dataset_params.get('valid_csv', None)
+        sites = dataset_params.get('sites', [1])
+        channels = dataset_params.get('channels', [1, 2, 3, 4, 5, 6])
+        root = dataset_params.get('root', None)
 
         if train_csv:
             transform = train_aug(image_size)
-            train_set = RecursionCellularWithPos(
+            train_set = dataset_func(
                 csv_file=train_csv,
                 root=root,
                 transform=transform,
@@ -70,7 +77,7 @@ class Experiment(ConfigExperiment):
 
         if valid_csv:
             transform = valid_aug(image_size)
-            valid_set = RecursionCellularWithPos(
+            valid_set = dataset_func(
                 csv_file=valid_csv,
                 root=root,
                 transform=transform,

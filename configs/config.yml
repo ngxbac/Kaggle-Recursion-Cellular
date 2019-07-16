@@ -1,5 +1,5 @@
 model_params:
-  model: SENet
+  model: cell_senet
   model_name: se_resnext50_32x4d
   n_channels: 4
   num_classes: 1108
@@ -28,11 +28,13 @@ stages:
     drop_last: False
 
     image_size: &image_size 512
-    train_csv: "./csv/train_0.csv"
-    valid_csv: "./csv/valid_0.csv"
-    root: "/raid/data/kaggle/recursion-cellular-image-classification/"
-    sites: [1]
-    channels: [1, 2, 3, 4]
+    dataset_params:
+      dataset_name: RecursionCellularOptimalChannel
+      train_csv: "./csv/train_0.csv"
+      valid_csv: "./csv/valid_0.csv"
+      root: "/raid/data/kaggle/recursion-cellular-image-classification/"
+      sites: [1]
+      channels: [1, 2, 3, 4]
 
   stage0:
 

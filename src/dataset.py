@@ -41,9 +41,10 @@ RGB_MAP = {
 }
 
 
-
 def load_image(path):
     image = cv2.imread(path, 0)
+    if not os.path.isfile(path):
+        print(path)
     return image
 
 
@@ -181,128 +182,6 @@ def normalize(img, mean, std, max_pixel_value=255.0):
     return img
 
 
-class RecursionCellularSite(Dataset):
-
-    def __init__(self,
-                 csv_file,
-                 root,
-                 transform,
-                 sites=[1],
-                 mode='train',
-                 channels=[1, 2, 3, 4, 5, 6],
-                 ):
-        print("Channels ", channels)
-        print("sites ", sites)
-        print(csv_file)
-        df = pd.read_csv(csv_file, nrows=None)
-        self.pixel_stat = pd.read_csv(os.path.join(root, "pixel_stats.csv"))
-        self.stat_dict = {}
-        for experiment, plate, well, site, channel, mean, std in zip(self.pixel_stat.experiment,
-                                                                   self.pixel_stat.plate,
-                                                                   self.pixel_stat.well,
-                                                                   self.pixel_stat.site,
-                                                                   self.pixel_stat.channel,
-                                                                   self.pixel_stat["mean"],
-                                                                   self.pixel_stat["std"]):
-            if not experiment in self.stat_dict:
-                self.stat_dict[experiment] = {}
-
-            if not plate in self.stat_dict[experiment]:
-                self.stat_dict[experiment][plate] = {}
-
-            if not well in self.stat_dict[experiment][plate]:
-                self.stat_dict[experiment][plate][well] = {}
-
-            if not site in self.stat_dict[experiment][plate][well]:
-                self.stat_dict[experiment][plate][well][site] = {}
-
-            if not channel in self.stat_dict[experiment][plate][well][site]:
-                self.stat_dict[experiment][plate][well][site][channel] = {}
-
-            self.stat_dict[experiment][plate][well][site][channel]["mean"] = mean / 255
-            self.stat_dict[experiment][plate][well][site][channel]["std"] = std / 255
-
-
-        self.transform = transform
-        self.mode = mode
-        self.channels = channels
-        self.sites = sites
-
-        self.experiments = df['experiment'].values
-        self.plates = df['plate'].values
-        self.wells = df['well'].values
-
-        if mode != 'test':
-            self.labels = df['sirna'].values
-        else:
-            self.labels = [0] * len(self.experiments)
-
-        self.root = root
-
-    def __len__(self):
-        return len(self.experiments)
-
-    def __getitem__(self, idx):
-
-        experiment = self.experiments[idx]
-        plate = self.plates[idx]
-        well = self.wells[idx]
-
-        channel_paths = []
-
-        if self.mode == 'train':
-            if np.random.rand() < 0.5:
-                sites = [1]
-            else:
-                sites = [2]
-        else:
-            sites = self.sites
-
-        # sites = self.sites
-
-        for site in sites:
-            for channel in self.channels:
-                path = image_path(
-                    dataset=self.mode,
-                    experiment=experiment,
-                    plate=plate,
-                    address=well,
-                    channel=channel,
-                    site=site,
-                    base_path=self.root,
-                )
-                channel_paths.append(path)
-
-        std_arr = []
-        mean_arr = []
-
-        for site in sites:
-            for channel in self.channels:
-                mean = self.stat_dict[experiment][plate][well][site][channel]["mean"]
-                std = self.stat_dict[experiment][plate][well][site][channel]["std"]
-                std_arr.append(std)
-                mean_arr.append(mean)
-
-        image = load_images_as_tensor(channel_paths, dtype=np.float32)
-        # image = convert_tensor_to_rgb(image)
-        # image = image / 255
-        if self.transform:
-            image = self.transform(image=image)['image']
-
-        image = normalize(image, std=std_arr, mean=mean_arr, max_pixel_value=255)
-        image = np.transpose(image, (2, 0, 1)).astype(np.float32)
-
-        if self.mode == 'train':
-            label = self.labels[idx]
-        else:
-            label = -1
-
-        return {
-            "images": image,
-            "targets": label
-        }
-
-
 def _load_dataset(base_path, dataset, include_controls=True):
     df =  pd.read_csv(os.path.join(base_path, dataset + '.csv'))
     if include_controls:
@@ -334,7 +213,7 @@ def combine_metadata(base_path=None,
     return df
 
 
-class RecursionCellularWithPos(Dataset):
+class RecursionCellularBase(Dataset):
 
     def __init__(self,
                  csv_file,
@@ -349,17 +228,27 @@ class RecursionCellularWithPos(Dataset):
         print(csv_file)
         df = pd.read_csv(csv_file, nrows=None)
         self.pixel_stat = pd.read_csv(os.path.join(root, "pixel_stats.csv"))
+        df = self.preprocess_df(df, root, mode)
 
-        self.md = combine_metadata(base_path=root).reset_index()
-        self.md = self.md[
-            (self.md.dataset == mode) &\
-            (self.md.well_type == 'positive_control') &\
-            (self.md.experiment.isin(df.experiment))
-        ]
-        self.pos_sirna_encoder = LabelEncoder()
-        self.pos_sirna_encoder.fit(POS_CONTROL_SIRNA)
-        self.md['sirna'] = self.pos_sirna_encoder.transform(self.md['sirna'].astype(np.int))
+        self.create_pixel_stat_dict()
 
+        self.transform = transform
+        self.mode = mode
+        self.channels = channels
+        self.sites = sites
+
+        self.experiments = df['experiment'].values
+        self.plates = df['plate'].values
+        self.wells = df['well'].values
+
+        if mode != 'test':
+            self.labels = df['sirna'].values
+        else:
+            self.labels = [0] * len(self.experiments)
+
+        self.root = root
+
+    def create_pixel_stat_dict(self):
         self.stat_dict = {}
         for experiment, plate, well, site, channel, mean, std in zip(self.pixel_stat.experiment,
                                                                    self.pixel_stat.plate,
@@ -386,21 +275,8 @@ class RecursionCellularWithPos(Dataset):
             self.stat_dict[experiment][plate][well][site][channel]["mean"] = mean / 255
             self.stat_dict[experiment][plate][well][site][channel]["std"] = std / 255
 
-        self.transform = transform
-        self.mode = mode
-        self.channels = channels
-        self.sites = sites
-
-        self.experiments = df['experiment'].values
-        self.plates = df['plate'].values
-        self.wells = df['well'].values
-
-        if mode != 'test':
-            self.labels = df['sirna'].values
-        else:
-            self.labels = [0] * len(self.experiments)
-
-        self.root = root
+    def preprocess_df(self, df, root, mode):
+        return df
 
     def __len__(self):
         return len(self.experiments)
@@ -464,38 +340,32 @@ class RecursionCellularWithPos(Dataset):
         image = np.transpose(image, (2, 0, 1)).astype(np.float32)
         return image
 
+    def aug_sites(self, mode, sites):
+        if mode == 'train':
+            if np.random.rand() < 0.5:
+                sites = [1]
+            else:
+                sites = [2]
+        else:
+            sites = sites
+
+        return sites
+
     def __getitem__(self, idx):
 
         experiment = self.experiments[idx]
         plate = self.plates[idx]
         well = self.wells[idx]
 
-        if self.mode == 'train':
-            if np.random.rand() < 0.5:
-                sites = [1]
-            else:
-                sites = [2]
-        else:
-            sites = self.sites
+        sites = self.aug_sites(
+            mode=self.mode,
+            sites=self.sites
+        )
 
         image = self.load_and_aug_image(
             experiment=experiment,
             plate=plate,
             well=well,
-            sites=sites,
-            channels=self.channels
-        )
-
-        # Get random positive control data in this experiment/plate
-        rnd_pos_well, rnd_pos_sirna = self.get_random_pos_control(
-            experiment=experiment,
-            plate=plate
-        )
-
-        pos_image = self.load_and_aug_image(
-            experiment=experiment,
-            plate=plate,
-            well=rnd_pos_well,
             sites=sites,
             channels=self.channels
         )
@@ -507,7 +377,90 @@ class RecursionCellularWithPos(Dataset):
 
         return {
             "images": image,
-            "pos_image": pos_image,
             "targets": label,
-            "pos_target": rnd_pos_sirna
+        }
+
+
+class RecursionCellularPositiveOnly(RecursionCellularBase):
+    def __init__(self,
+                 csv_file,
+                 root,
+                 transform,
+                 sites=[1],
+                 mode='train',
+                 channels=[1, 2, 3, 4, 5, 6],
+                 ):
+        super(RecursionCellularPositiveOnly, self).__init__(
+            csv_file,
+            root,
+            transform,
+            sites,
+            mode,
+            channels,
+        )
+
+    def preprocess_df(self, df, root, mode):
+        # return df
+        md = combine_metadata(base_path=root).reset_index()
+        md = md[
+            (md.dataset == mode) &\
+            (md.well_type == 'positive_control') &\
+            (md.experiment.isin(df.experiment)) &\
+            (md.site == 1)
+        ]
+        pos_sirna_encoder = LabelEncoder()
+        pos_sirna_encoder.fit(POS_CONTROL_SIRNA)
+        md['sirna'] = pos_sirna_encoder.transform(md['sirna'].astype(np.int))
+        return md
+
+
+class RecursionCellularOptimalChannel(RecursionCellularBase):
+    def __init__(self,
+                 csv_file,
+                 root,
+                 transform,
+                 sites=[1],
+                 mode='train',
+                 channels=[1, 2, 3, 4, 5, 6],
+                 ):
+        super(RecursionCellularOptimalChannel, self).__init__(
+            csv_file,
+            root,
+            transform,
+            sites,
+            mode,
+            channels,
+        )
+
+        self.optimal_channels = np.load("./csv/optimal_channel.npy")
+
+    def __getitem__(self, idx):
+
+        experiment = self.experiments[idx]
+        plate = self.plates[idx]
+        well = self.wells[idx]
+
+        if self.mode == 'train':
+            label = self.labels[idx]
+        else:
+            label = -1
+
+        channels = self.optimal_channels[label]
+
+        sites = self.aug_sites(
+            mode=self.mode,
+            sites=self.sites
+        )
+
+        image = self.load_and_aug_image(
+            experiment=experiment,
+            plate=plate,
+            well=well,
+            sites=sites,
+            channels=channels
+        )
+
+        return {
+            "images": image,
+            "targets": label,
         }
