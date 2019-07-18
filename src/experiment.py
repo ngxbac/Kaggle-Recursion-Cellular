@@ -28,7 +28,7 @@ class Experiment(ConfigExperiment):
             else:
                 for param in model_._features.parameters():
                     param.requires_grad = False
-                    print("Freeze backbone model !!!")
+                print("Freeze backbone model !!!")
 
         else:
             if hasattr(model_, 'unfreeze'):
@@ -37,7 +37,7 @@ class Experiment(ConfigExperiment):
             else:
                 for param in model_._features.parameters():
                     param.requires_grad = True
-                    print("Freeze backbone model !!!")
+                print("Freeze backbone model !!!")
 
         return model_
 
