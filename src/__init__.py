@@ -13,6 +13,9 @@ registry.Model(ResNet)
 registry.Model(cell_senet)
 registry.Model(cell_densenet)
 registry.Model(EfficientNet)
+registry.Model(SENetTIMM)
+registry.Model(InceptionV3TIMM)
+registry.Model(GluonResnetTIMM)
 
 # Register callbacks
 registry.Callback(LabelSmoothCriterionCallback)
