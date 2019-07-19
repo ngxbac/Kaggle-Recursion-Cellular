@@ -34,14 +34,14 @@ def predict(model, loader):
 
 
 def predict_all():
-    test_csv = '/raid/data/kaggle/recursion-cellular-image-classification/test.csv'
+    test_csv = './data/test.csv'
     # test_csv = './csv/valid_0.csv'
 
-    for fold in [0, 1, 2, 3]:
+    for fold in [0,1,2,3,4]:
         model_name = 'se_resnext50_32x4d'
 
-        log_dir = f"/raid/bac/kaggle/logs/recursion_cell/search_channels/fold_{fold}/[1,2,3,4]/se_resnext50_32x4d/"
-        root = "/raid/data/kaggle/recursion-cellular-image-classification/"
+        log_dir = f"./bin/log/checkpoints/"
+        root = "./data/"
         sites = [1]
         channels = [1,2,3,4]
 
@@ -73,7 +73,7 @@ def predict_all():
                 dataset=dataset,
                 batch_size=128,
                 shuffle=False,
-                num_workers=4,
+                num_workers=12,
             )
 
             pred = predict(model, loader)
@@ -90,14 +90,14 @@ def predict_all():
 
 
 def predict_one():
-    test_csv = '/raid/data/kaggle/recursion-cellular-image-classification/test.csv'
+    test_csv = './data/test.csv'
     # test_csv = './csv/valid_0.csv'
 
     model_name = 'se_resnext50_32x4d'
-    experiment = "c1234_s1_affine_warmup"
+    experiment = "dropout_channel"
 
-    log_dir = f"/raid/bac/kaggle/logs/recursion_cell/test/{experiment}/{model_name}/"
-    root = "/raid/data/kaggle/recursion-cellular-image-classification/"
+    log_dir = f"./bin/log/"
+    root = "./data/"
     sites = [1]
     channels = [1,2,3,4]
 

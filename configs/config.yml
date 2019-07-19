@@ -24,16 +24,17 @@ stages:
 
   data_params:
     batch_size: 64
-    num_workers: 8
+    num_workers: 16
     drop_last: False
+    # drop_last: True
 
     image_size: &image_size 512
     train_csv: "./csv/train_0.csv"
     valid_csv: "./csv/valid_0.csv"
-    root: "/raid/data/kaggle/recursion-cellular-image-classification/"
+    root: "./data/"
     sites: [1]
     channels: [1, 2, 3, 4]
-
+##################################################
   stage0:
 
     optimizer_params:
@@ -63,7 +64,7 @@ stages:
         reduce_metric: *reduce_metric
       saver:
         callback: CheckpointCallback
-
+##########################################################
   stage1:
 
     optimizer_params:
@@ -72,12 +73,48 @@ stages:
 
     scheduler_params:
       scheduler: OneCycleLR
-      num_steps: &num_epochs 30
+      num_steps: 50
       lr_range: [0.0005, 0.00001]
+      # lr_range: [0.0015, 0.00003]
       warmup_steps: 5
       momentum_range: [0.85, 0.95]
 
     state_params:
-      num_epochs: *num_epochs
+      num_epochs: 50
 
     callbacks_params: *callback_params
+######################################################
+  # stage2:
+
+  #   optimizer_params:
+  #     optimizer: Nadam
+  #     lr: 0.00001
+
+  #   scheduler_params:
+  #     scheduler: ReduceLROnPlateau
+  #     patience: 2
+  #     # num_steps: 30
+  #     # lr_range: [0.0007, 0.00001]
+  #     # warmup_steps: 0
+  #     # momentum_range: [0.85, 0.95]
+
+  #   state_params:
+  #     num_epochs: 10
+
+  #   criterion_params:
+  #       criterion: LabelSmoothingCrossEntropy
+
+  #   callbacks_params:
+  #     loss:
+  #       callback: LabelSmoothCriterionCallback
+  #     optimizer:
+  #       callback: OptimizerCallback
+  #       accumulation_steps: 2
+  #     accuracy:
+  #       callback: AccuracyCallback
+  #       accuracy_args: [1]
+  #     scheduler:
+  #       callback: SchedulerCallback
+  #       reduce_metric: *reduce_metric
+  #     saver:
+  #       callback: CheckpointCallback

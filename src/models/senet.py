@@ -36,6 +36,7 @@ def cell_senet(model_name='se_resnext50_32x4d', num_classes=1108, n_channels=6):
         pretrained=True,
         # pool=GlobalConcatPool2d(),
         # classifier_factory=make_classifier
+        dropout_p=0.3
     )
     # print(model)
     conv1 = model._features[0].conv1

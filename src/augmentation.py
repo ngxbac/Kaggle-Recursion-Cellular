@@ -4,22 +4,24 @@ import itertools
 
 
 def train_aug(image_size=224):
-    policies = './csv/best_policy.data'
-    with open(policies, 'r') as fid:
-        policies = eval(fid.read())
-        policies = itertools.chain.from_iterable(policies)
+    # policies = './csv/best_policy.data'
+    # with open(policies, 'r') as fid:
+    #     policies = eval(fid.read())
+    #     policies = itertools.chain.from_iterable(policies)
 
-    aug_list = []
-    for policy in policies:
-        op_1, params_1 = policy[0]
-        op_2, params_2 = policy[1]
-        aug = Compose([
-            globals().get(op_1)(**params_1),
-            globals().get(op_2)(**params_2),
-        ])
-        aug_list.append(aug)
+    # aug_list = []
+    # for policy in policies:
+    #     op_1, params_1 = policy[0]
+    #     op_2, params_2 = policy[1]
+    #     aug = Compose([
+    #         globals().get(op_1)(**params_1),
+    #         globals().get(op_2)(**params_2),
+    #     ])
+    #     aug_list.append(aug)
 
     return Compose([
+        ChannelDropout(),
+        # CLAHE(),
         RandomRotate90(),
         Flip(),
         Transpose(),
