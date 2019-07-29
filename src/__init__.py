@@ -16,10 +16,13 @@ registry.Model(EfficientNet)
 registry.Model(SENetTIMM)
 registry.Model(InceptionV3TIMM)
 registry.Model(GluonResnetTIMM)
+registry.Model(DSInceptionV3)
 
 # Register callbacks
 registry.Callback(LabelSmoothCriterionCallback)
 registry.Callback(SmoothMixupCallback)
+registry.Callback(DSAccuracyCallback)
+registry.Callback(DSCriterionCallback)
 
 # Register criterions
 registry.Criterion(LabelSmoothingCrossEntropy)

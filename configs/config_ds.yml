@@ -1,0 +1,99 @@
+model_params:
+  model: DSInceptionV3
+  pretrained: True
+  n_channels: 5
+  num_classes: 1108
+
+args:
+  expdir: "src"
+  logdir: &logdir "./logs/cell"
+  baselogdir: "./logs/cell"
+
+distributed_params:
+  opt_level: O1
+
+stages:
+
+  state_params:
+    main_metric: &reduce_metric acc_final
+    minimize_metric: False
+
+  criterion_params:
+#    criterion: CrossEntropyLoss
+    criterion: LabelSmoothingCrossEntropy
+
+  data_params:
+    batch_size: 64
+    num_workers: 16
+    drop_last: False
+    # drop_last: True
+
+    image_size: &image_size 512
+    train_csv: "./csv/train_0.csv"
+    valid_csv: "./csv/valid_0.csv"
+    root: "/raid/data/kaggle/recursion-cellular-image-classification/"
+    sites: [1]
+    channels: [1, 2, 3, 4]
+
+  stage0:
+
+    optimizer_params:
+      optimizer: Nadam
+      lr: 0.001
+
+    scheduler_params:
+      scheduler: MultiStepLR
+      milestones: [10]
+      gamma: 0.3
+
+    state_params:
+      num_epochs: 2
+
+    callbacks_params: &callback_params
+      loss:
+        callback: DSCriterionCallback
+        loss_weights: [0.001, 0.005, 0.01, 0.02, 0.02, 0.1, 1.0]
+      optimizer:
+        callback: OptimizerCallback
+        accumulation_steps: 2
+      accuracy:
+        callback: DSAccuracyCallback
+        logit_names: ["m2", "m4", "m6", "m8", "m9", "m10", "final"]
+      scheduler:
+        callback: SchedulerCallback
+        reduce_metric: *reduce_metric
+      saver:
+        callback: CheckpointCallback
+
+  stage1:
+
+    optimizer_params:
+      optimizer: Nadam
+      lr: 0.0001
+
+    scheduler_params:
+      scheduler: OneCycleLR
+      num_steps: 50
+      lr_range: [0.0005, 0.00001]
+      # lr_range: [0.0015, 0.00003]
+      warmup_steps: 5
+      momentum_range: [0.85, 0.95]
+
+    state_params:
+      num_epochs: 50
+
+    callbacks_params:
+      loss:
+        callback: DSCriterionCallback
+        loss_weights: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+      optimizer:
+        callback: OptimizerCallback
+        accumulation_steps: 2
+      accuracy:
+        callback: DSAccuracyCallback
+        logit_names: ["m2", "m4", "m6", "m8", "m9", "m10", "final"]
+      scheduler:
+        callback: SchedulerCallback
+        reduce_metric: *reduce_metric
+      saver:
+        callback: CheckpointCallback
