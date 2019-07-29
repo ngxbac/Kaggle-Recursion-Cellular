@@ -1,5 +1,5 @@
 model_params:
-  model: DSInceptionV3
+  model: DSSENet
   pretrained: True
   n_channels: 5
   num_classes: 1108
@@ -52,13 +52,15 @@ stages:
     callbacks_params: &callback_params
       loss:
         callback: DSCriterionCallback
-        loss_weights: [0.001, 0.005, 0.01, 0.02, 0.02, 0.1, 1.0]
+#        loss_weights: [0.001, 0.005, 0.01, 0.02, 0.02, 0.1, 1.0] # For DS InceptionV3
+        loss_weights: [0.02, 0.02, 0.1, 1.0]
       optimizer:
         callback: OptimizerCallback
         accumulation_steps: 2
       accuracy:
         callback: DSAccuracyCallback
-        logit_names: ["m2", "m4", "m6", "m8", "m9", "m10", "final"]
+#        logit_names: ["m2", "m4", "m6", "m8", "m9", "m10", "final"] # For DS InceptionV3
+        logit_names: ["m1", "m2", "m3", "final"]
       scheduler:
         callback: SchedulerCallback
         reduce_metric: *reduce_metric
@@ -85,13 +87,15 @@ stages:
     callbacks_params:
       loss:
         callback: DSCriterionCallback
-        loss_weights: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+#        loss_weights: [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0]
+        loss_weights: [0.02, 0.02, 0.1, 1.0]
       optimizer:
         callback: OptimizerCallback
         accumulation_steps: 2
       accuracy:
         callback: DSAccuracyCallback
-        logit_names: ["m2", "m4", "m6", "m8", "m9", "m10", "final"]
+#        logit_names: ["m2", "m4", "m6", "m8", "m9", "m10", "final"]
+        logit_names: ["m1", "m2", "m3", "final"]
       scheduler:
         callback: SchedulerCallback
         reduce_metric: *reduce_metric

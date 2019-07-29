@@ -17,6 +17,7 @@ registry.Model(SENetTIMM)
 registry.Model(InceptionV3TIMM)
 registry.Model(GluonResnetTIMM)
 registry.Model(DSInceptionV3)
+registry.Model(DSSENet)
 
 # Register callbacks
 registry.Callback(LabelSmoothCriterionCallback)

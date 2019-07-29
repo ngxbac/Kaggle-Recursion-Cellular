@@ -6,7 +6,7 @@ RUN_CONFIG=config_ds.yml
 
 for channels in [1,2,3,4,5]; do
     for fold in 0; do
-        LOGDIR=/raid/bac/kaggle/logs/recursion_cell/test/190729/fold_$fold/DSInceptionV3/
+        LOGDIR=/raid/bac/kaggle/logs/recursion_cell/test/190729/fold_$fold/DSSENet/
         catalyst-dl run \
             --config=./configs/${RUN_CONFIG} \
             --logdir=$LOGDIR \
