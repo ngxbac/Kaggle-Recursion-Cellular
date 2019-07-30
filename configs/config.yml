@@ -1,8 +1,8 @@
 model_params:
-  model: cell_senet
-  model_name: se_resnext50_32x4d
-  n_channels: 4
+  model: ResNet50CutMix
+  n_channels: 5
   num_classes: 1108
+  pretrained: "/raid/bac/pretrained_models/pytorch/ResNet50_CutMix_v2.pth"
 
 args:
   expdir: "src"
@@ -24,17 +24,17 @@ stages:
 
   data_params:
     batch_size: 64
-    num_workers: 16
+    num_workers: 8
     drop_last: False
     # drop_last: True
 
     image_size: &image_size 512
     train_csv: "./csv/train_0.csv"
     valid_csv: "./csv/valid_0.csv"
-    root: "./data/"
+    root: "/raid/data/kaggle/recursion-cellular-image-classification/"
     sites: [1]
-    channels: [1, 2, 3, 4]
-##################################################
+    channels: [1, 2, 3, 4, 5]
+
   stage0:
 
     optimizer_params:
@@ -64,7 +64,7 @@ stages:
         reduce_metric: *reduce_metric
       saver:
         callback: CheckpointCallback
-##########################################################
+
   stage1:
 
     optimizer_params:
@@ -83,38 +83,3 @@ stages:
       num_epochs: 50
 
     callbacks_params: *callback_params
-######################################################
-  # stage2:
-
-  #   optimizer_params:
-  #     optimizer: Nadam
-  #     lr: 0.00001
-
-  #   scheduler_params:
-  #     scheduler: ReduceLROnPlateau
-  #     patience: 2
-  #     # num_steps: 30
-  #     # lr_range: [0.0007, 0.00001]
-  #     # warmup_steps: 0
-  #     # momentum_range: [0.85, 0.95]
-
-  #   state_params:
-  #     num_epochs: 10
-
-  #   criterion_params:
-  #       criterion: LabelSmoothingCrossEntropy
-
-  #   callbacks_params:
-  #     loss:
-  #       callback: LabelSmoothCriterionCallback
-  #     optimizer:
-  #       callback: OptimizerCallback
-  #       accumulation_steps: 2
-  #     accuracy:
-  #       callback: AccuracyCallback
-  #       accuracy_args: [1]
-  #     scheduler:
-  #       callback: SchedulerCallback
-  #       reduce_metric: *reduce_metric
-  #     saver:
-  #       callback: CheckpointCallback

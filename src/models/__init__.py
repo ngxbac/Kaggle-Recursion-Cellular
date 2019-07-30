@@ -1,4 +1,4 @@
-from .resnet import ResNet
+from .resnet import ResNet, ResNet50CutMix
 from .senet import cell_senet, SENetTIMM
 from .densenet import cell_densenet
 from .efficientnet import EfficientNet
