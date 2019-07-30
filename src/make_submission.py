@@ -25,7 +25,7 @@ def predict(model, loader):
         for dct in tqdm(loader, total=len(loader)):
             images = dct['images'].to(device)
             pred = model(images)
-            pred = Ftorch.softmax(pred)
+            # pred = Ftorch.softmax(pred)
             pred = pred.detach().cpu().numpy()
             preds.append(pred)
 
@@ -90,20 +90,20 @@ def predict_all():
 
 
 def predict_one():
-    test_csv = './data/test.csv'
+    test_csv = '/raid/data/kaggle/recursion-cellular-image-classification/test.csv'
     # test_csv = './csv/valid_0.csv'
 
     model_name = 'se_resnext50_32x4d'
-    experiment = "dropout_channel"
+    experiment = "private_pseudo"
 
-    log_dir = f"./bin/log/"
-    root = "./data/"
+    log_dir = f"/raid/bac/kaggle/logs/recursion_cell/test/190730/{experiment}/fold_0/{model_name}/"
+    root = "/raid/data/kaggle/recursion-cellular-image-classification/"
     sites = [1]
-    channels = [1,2,3,4]
+    channels = [1,2,3,4,5]
 
     preds = []
     model = cell_senet(
-        model_name="se_resnext50_32x4d",
+        model_name=model_name,
         num_classes=1108,
         n_channels=len(channels) * len(sites)
     )
@@ -136,12 +136,12 @@ def predict_one():
         preds.append(pred)
 
     preds = np.asarray(preds).mean(axis=0)
-    all_preds = np.argmax(preds, axis=1)
+    # all_preds = np.argmax(preds, axis=1)
     df = pd.read_csv(test_csv)
-    submission = df.copy()
-    submission['sirna'] = all_preds.astype(int)
+    # submission = df.copy()
+    # submission['sirna'] = all_preds.astype(int)
     os.makedirs("submission/", exist_ok=True)
-    submission.to_csv(f'./submission/{model_name}_{experiment}.csv', index=False, columns=['id_code', 'sirna'])
+    # submission.to_csv(f'./submission/{model_name}_{experiment}.csv', index=False, columns=['id_code', 'sirna'])
     np.save(f"./submission/{model_name}_{experiment}.npy", preds)
 
 

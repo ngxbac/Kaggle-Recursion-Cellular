@@ -119,7 +119,7 @@ def predict_all():
 def predict_deepsupervision():
     test_csv = '/raid/data/kaggle/recursion-cellular-image-classification/test.csv'
     # test_csv = './csv/valid_0.csv'
-    model_name = 'DSInceptionV3'
+    model_name = 'DSSENet'
 
     for channel_str in [
         "[1,2,3,4,5]",
@@ -134,7 +134,7 @@ def predict_deepsupervision():
         # log_dir = log_dir.replace(']', '[]]')
 
         ckp = os.path.join(log_dir, "checkpoints/stage1.50.pth")
-        model = DSInceptionV3(
+        model = DSSENet(
             num_classes=1108,
             n_channels=len(channels) * len(sites)
         )

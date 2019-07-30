@@ -1,0 +1,86 @@
+model_params:
+  model: cell_senet
+  model_name: se_resnext50_32x4d
+  n_channels: 5
+  num_classes: 1108
+
+args:
+  expdir: "src"
+  logdir: &logdir "./logs/cell"
+  baselogdir: "./logs/cell"
+
+distributed_params:
+  opt_level: O1
+
+stages:
+
+  state_params:
+    main_metric: &reduce_metric accuracy01
+    minimize_metric: False
+
+  criterion_params:
+#    criterion: CrossEntropyLoss
+    criterion: LabelSmoothingCrossEntropy
+
+  data_params:
+    batch_size: 64
+    num_workers: 16
+    drop_last: False
+    # drop_last: True
+
+    image_size: &image_size 512
+    train_csv: "./csv/train_0.csv"
+    valid_csv: "./csv/valid_0.csv"
+    pseudo_csv: "./csv/pseudo.csv"
+    root: "/raid/data/kaggle/recursion-cellular-image-classification/"
+    sites: [1]
+    channels: [1, 2, 3, 4, 5]
+
+  stage0:
+
+    optimizer_params:
+      optimizer: Nadam
+      lr: 0.001
+
+    scheduler_params:
+      scheduler: MultiStepLR
+      milestones: [10]
+      gamma: 0.3
+
+    state_params:
+      num_epochs: 2
+
+    callbacks_params: &callback_params
+      loss:
+        #        callback: CriterionCallback
+        callback: LabelSmoothCriterionCallback
+      optimizer:
+        callback: OptimizerCallback
+        accumulation_steps: 2
+      accuracy:
+        callback: AccuracyCallback
+        accuracy_args: [1]
+      scheduler:
+        callback: SchedulerCallback
+        reduce_metric: *reduce_metric
+      saver:
+        callback: CheckpointCallback
+
+  stage1:
+
+    optimizer_params:
+      optimizer: Nadam
+      lr: 0.0001
+
+    scheduler_params:
+      scheduler: OneCycleLR
+      num_steps: 50
+      lr_range: [0.0005, 0.00001]
+      # lr_range: [0.0015, 0.00003]
+      warmup_steps: 5
+      momentum_range: [0.85, 0.95]
+
+    state_params:
+      num_epochs: 50
+
+    callbacks_params: *callback_params

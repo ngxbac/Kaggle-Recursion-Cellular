@@ -228,6 +228,8 @@ class RecursionCellularSite(Dataset):
         print("sites ", sites)
         print(csv_file)
         df = pd.read_csv(csv_file, nrows=None)
+        if not 'sirna' in df.columns:
+            df['sirna'] = 0
         # if "train" in csv_file:
         #     md = combine_metadata(base_path=root)
         #     md = md[(md.dataset == mode) & (md.site == 1)]
@@ -272,10 +274,11 @@ class RecursionCellularSite(Dataset):
         self.plates = df['plate'].values
         self.wells = df['well'].values
 
-        if mode != 'test':
-            self.labels = df['sirna'].values
-        else:
-            self.labels = [0] * len(self.experiments)
+        self.labels = df['sirna'].values
+        # if mode != 'test':
+        #     self.labels = df['sirna'].values
+        # else:
+        #     self.labels = [0] * len(self.experiments)
 
         self.root = root
 
@@ -331,11 +334,7 @@ class RecursionCellularSite(Dataset):
 
         image = normalize(image, std=std_arr, mean=mean_arr, max_pixel_value=255)
         image = np.transpose(image, (2, 0, 1)).astype(np.float32)
-
-        if self.mode == 'train':
-            label = self.labels[idx]
-        else:
-            label = -1
+        label = self.labels[idx]
 
         return {
             "images": image,
