@@ -56,6 +56,7 @@ class Experiment(ConfigExperiment):
         pseudo_csv = kwargs.get('pseudo_csv', None)
         sites = kwargs.get('sites', [1])
         channels = kwargs.get('channels', [1, 2, 3, 4, 5, 6])
+        site_mode = kwargs.get('site_mode', 'random')
         root = kwargs.get('root', None)
 
         if train_csv:
@@ -66,7 +67,8 @@ class Experiment(ConfigExperiment):
                 transform=transform,
                 mode='train',
                 sites=sites,
-                channels=channels
+                channels=channels,
+                site_mode=site_mode
             )
 
             if pseudo_csv:
@@ -76,7 +78,8 @@ class Experiment(ConfigExperiment):
                     transform=transform,
                     mode='test',
                     sites=sites,
-                    channels=channels
+                    channels=channels,
+                    site_mode=site_mode
                 )
 
                 train_set = ConcatDataset([

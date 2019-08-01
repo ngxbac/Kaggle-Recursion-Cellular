@@ -32,6 +32,7 @@ stages:
     valid_csv: "./csv/kfold5/valid_0.csv"
     root: "/raid/data/kaggle/recursion-cellular-image-classification/"
     sites: [1]
+    site_mode: 'random'
     channels: [1, 2, 3, 4, 5, 6]
 
 #  stage0:
