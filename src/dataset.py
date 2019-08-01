@@ -276,17 +276,12 @@ class RecursionCellularSite(Dataset):
         if mode == 'train':
             self.sites = df["site"].values
         else:
-            self.sites = site
+            self.sites = sites
 
         self.experiments = df['experiment'].values
         self.plates = df['plate'].values
         self.wells = df['well'].values
-
         self.labels = df['sirna'].values
-        # if mode != 'test':
-        #     self.labels = df['sirna'].values
-        # else:
-        #     self.labels = [0] * len(self.experiments)
 
         self.root = root
 
@@ -309,7 +304,7 @@ class RecursionCellularSite(Dataset):
             sites = self.sites[idx]
             sites = [sites]
         else:
-            sites = [self.sites]
+            sites = self.sites
 
         # sites = self.sites
 
