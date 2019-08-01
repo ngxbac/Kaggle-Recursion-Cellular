@@ -31,8 +31,8 @@ class DSInceptionV3(nn.Module):
                                              bias=conv1.bias)
 
         # copy pretrained weights
-        self.model.Conv2d_1a_3x3.conv.weight.data[:, :3, :, :] = conv1.weight.data
-        self.model.Conv2d_1a_3x3.conv.weight.data[:, 3:n_channels, :, :] = conv1.weight.data[:, :int(n_channels - 3), :, :]
+        # self.model.Conv2d_1a_3x3.conv.weight.data[:, :3, :, :] = conv1.weight.data
+        # self.model.Conv2d_1a_3x3.conv.weight.data[:, 3:n_channels, :, :] = conv1.weight.data[:, :int(n_channels - 3), :, :]
 
         self.deepsuper_2 = nn.Sequential(
             GlobalConcatPool2d(),
@@ -163,7 +163,7 @@ class DSInceptionV3(nn.Module):
     def freeze(self):
         # Freeze all the backbone
         for param in self.model.parameters():
-            param.requires_grad = False
+            param.requires_grad = True
 
     def unfreeze(self):
         # Unfreeze all the backbone

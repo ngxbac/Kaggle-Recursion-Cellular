@@ -228,6 +228,11 @@ class RecursionCellularSite(Dataset):
         print("sites ", sites)
         print(csv_file)
         df = pd.read_csv(csv_file, nrows=None)
+        if mode == 'train':
+            df["site"] = 1
+            df_copy = df.copy()
+            df_copy["site"] = 2
+            df = pd.concat([df, df_copy], axis=0).reset_index(drop=True)
         if not 'sirna' in df.columns:
             df['sirna'] = 0
         # if "train" in csv_file:
@@ -268,7 +273,10 @@ class RecursionCellularSite(Dataset):
         self.transform = transform
         self.mode = mode
         self.channels = channels
-        self.sites = sites
+        if mode == 'train':
+            self.sites = df["site"].values
+        else:
+            self.sites = site
 
         self.experiments = df['experiment'].values
         self.plates = df['plate'].values
@@ -294,12 +302,14 @@ class RecursionCellularSite(Dataset):
         channel_paths = []
 
         if self.mode == 'train':
-            if np.random.rand() < 0.5:
-                sites = [1]
-            else:
-                sites = [2]
+            # if np.random.rand() < 0.5:
+            #     sites = [1]
+            # else:
+            #     sites = [2]
+            sites = self.sites[idx]
+            sites = [sites]
         else:
-            sites = self.sites
+            sites = [self.sites]
 
         # sites = self.sites
 

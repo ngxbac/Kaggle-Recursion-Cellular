@@ -1,8 +1,9 @@
 model_params:
-  model: ResNet50CutMix
+  model: cell_senet
   n_channels: 5
   num_classes: 1108
-  pretrained: "/raid/bac/pretrained_models/pytorch/ResNet50_CutMix_v2.pth"
+  model_name: "se_resnext50_32x4d"
+#  pretrained: "/raid/bac/pretrained_models/pytorch/fishnet150_ckpt.tar"
 
 args:
   expdir: "src"
@@ -19,8 +20,8 @@ stages:
     minimize_metric: False
 
   criterion_params:
-#    criterion: CrossEntropyLoss
-    criterion: LabelSmoothingCrossEntropy
+    criterion: CrossEntropyLoss
+#    criterion: LabelSmoothingCrossEntropy
 
   data_params:
     batch_size: 64
@@ -29,8 +30,8 @@ stages:
     # drop_last: True
 
     image_size: &image_size 512
-    train_csv: "./csv/train_0.csv"
-    valid_csv: "./csv/valid_0.csv"
+    train_csv: "./csv/kfold5/train_0.csv"
+    valid_csv: "./csv/kfold5/valid_0.csv"
     root: "/raid/data/kaggle/recursion-cellular-image-classification/"
     sites: [1]
     channels: [1, 2, 3, 4, 5]
@@ -38,8 +39,8 @@ stages:
   stage0:
 
     optimizer_params:
-      optimizer: Nadam
-      lr: 0.001
+      optimizer: SGD
+      lr: 0.01
 
     scheduler_params:
       scheduler: MultiStepLR
@@ -49,10 +50,47 @@ stages:
     state_params:
       num_epochs: 2
 
+    callbacks_params:
+      loss:
+        callback: CriterionCallback
+#        callback: LabelSmoothCriterionCallback
+      optimizer:
+        callback: OptimizerCallback
+        accumulation_steps: 4
+      accuracy:
+        callback: AccuracyCallback
+        accuracy_args: [1]
+      scheduler:
+        callback: SchedulerCallback
+        reduce_metric: *reduce_metric
+      saver:
+        callback: CheckpointCallback
+      slack:
+        callback: SlackLogger
+        channel: logs_cell
+        url: "https://hooks.slack.com/services/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"
+
+  stage1:
+
+    optimizer_params:
+      optimizer: SGD
+      lr: 0.01
+
+    scheduler_params:
+      scheduler: CyclicLRFix
+      base_lr: 0.01
+      max_lr: 0.03
+      step_size_up: 250
+      step_size_down: 300
+      mode: "exp_range"
+#      cycle_momentum: False
+
+    state_params:
+      num_epochs: 30
+
     callbacks_params: &callback_params
       loss:
-        #        callback: CriterionCallback
-        callback: LabelSmoothCriterionCallback
+        callback: CriterionCallback
       optimizer:
         callback: OptimizerCallback
         accumulation_steps: 2
@@ -62,24 +100,51 @@ stages:
       scheduler:
         callback: SchedulerCallback
         reduce_metric: *reduce_metric
+        mode: "batch"
       saver:
         callback: CheckpointCallback
+      slack:
+        callback: SlackLogger
+        channel: logs_cell
+        url: "https://hooks.slack.com/services/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"
 
-  stage1:
+  stage2:
 
     optimizer_params:
-      optimizer: Nadam
-      lr: 0.0001
+      optimizer: SGD
+      lr: 0.002
 
     scheduler_params:
-      scheduler: OneCycleLR
-      num_steps: 50
-      lr_range: [0.0005, 0.00001]
-      # lr_range: [0.0015, 0.00003]
-      warmup_steps: 5
-      momentum_range: [0.85, 0.95]
+      scheduler: CyclicLRFix
+      base_lr: 0.002
+      max_lr: 0.005
+      step_size_up: 200
+      step_size_down: 258
+      mode: "exp_range"
+    #      cycle_momentum: False
 
     state_params:
-      num_epochs: 50
+      num_epochs: 10
+
+    callbacks_params: *callback_params
+
+
+  stage3:
+
+    optimizer_params:
+      optimizer: SGD
+      lr: 0.0004
+
+    scheduler_params:
+      scheduler: CyclicLRFix
+      base_lr: 0.0004
+      max_lr: 0.0008
+      step_size_up: 200
+      step_size_down: 258
+      mode: "exp_range"
+    #      cycle_momentum: False
+
+    state_params:
+      num_epochs: 10
 
     callbacks_params: *callback_params

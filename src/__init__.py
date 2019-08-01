@@ -6,6 +6,7 @@ from models import *
 from losses import *
 from callbacks import *
 from optimizers import *
+from schedulers import *
 
 
 # Register models
@@ -19,12 +20,14 @@ registry.Model(GluonResnetTIMM)
 registry.Model(DSInceptionV3)
 registry.Model(DSSENet)
 registry.Model(ResNet50CutMix)
+registry.Model(Fishnet)
 
 # Register callbacks
 registry.Callback(LabelSmoothCriterionCallback)
 registry.Callback(SmoothMixupCallback)
 registry.Callback(DSAccuracyCallback)
 registry.Callback(DSCriterionCallback)
+registry.Callback(SlackLogger)
 
 # Register criterions
 registry.Criterion(LabelSmoothingCrossEntropy)
@@ -32,3 +35,5 @@ registry.Criterion(LabelSmoothingCrossEntropy)
 # Register optimizers
 registry.Optimizer(AdamW)
 registry.Optimizer(Nadam)
+
+registry.Scheduler(CyclicLRFix)

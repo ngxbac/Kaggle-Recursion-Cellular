@@ -5,6 +5,50 @@ import torch
 import torch.nn as nn
 import numpy as np
 from typing import List
+import logging
+from slack_logger import SlackHandler, SlackFormatter
+
+
+class SlackLogger(Callback):
+    """
+    Logger callback, translates state.metrics to console and text file
+    """
+
+    def __init__(self, url, channel):
+        self.logger = None
+        self.url = url
+        self.channel = channel
+
+    @staticmethod
+    def _get_logger(url, channel):
+        logger = logging.getLogger("metrics")
+        logger.setLevel(logging.INFO)
+
+        slackhandler = SlackHandler(
+            username='logger',
+            icon_emoji=':robot_face:',
+            url=url,
+            channel=channel
+        )
+        slackhandler.setLevel(logging.INFO)
+
+        formater = SlackFormatter()
+        slackhandler.setFormatter(formater)
+        logger.addHandler(slackhandler)
+
+        return logger
+
+    def on_stage_start(self, state: RunnerState):
+        self.logger = self._get_logger(self.url, self.channel)
+
+    def on_stage_end(self, state):
+        self.logger.handlers = []
+
+    def on_epoch_end(self, state):
+        pass
+        # import pdb
+        # pdb.set_trace()
+        # self.logger.info("", extra={"state": state})
 
 
 class LabelSmoothCriterionCallback(Callback):

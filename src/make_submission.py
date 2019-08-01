@@ -94,7 +94,7 @@ def predict_one():
     # test_csv = './csv/valid_0.csv'
 
     model_name = 'se_resnext50_32x4d'
-    experiment = "private_pseudo"
+    experiment = "different_schedulers"
 
     log_dir = f"/raid/bac/kaggle/logs/recursion_cell/test/190730/{experiment}/fold_0/{model_name}/"
     root = "/raid/data/kaggle/recursion-cellular-image-classification/"
@@ -107,6 +107,13 @@ def predict_one():
         num_classes=1108,
         n_channels=len(channels) * len(sites)
     )
+
+    # model = Fishnet(
+    #     n_channels=5,
+    #     num_classes=1108,
+    #     model_name=model_name,
+    #     pretrained="/raid/bac/pretrained_models/pytorch/fishnet150_ckpt.tar"
+    # )
 
     checkpoint = f"{log_dir}/checkpoints/best.pth"
     checkpoint = torch.load(checkpoint)
@@ -127,7 +134,7 @@ def predict_one():
 
         loader = DataLoader(
             dataset=dataset,
-            batch_size=128,
+            batch_size=64,
             shuffle=False,
             num_workers=4,
         )

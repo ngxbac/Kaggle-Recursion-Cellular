@@ -6,7 +6,7 @@ RUN_CONFIG=config.yml
 
 for channels in [1,2,3,4,5]; do
     for fold in 0; do
-        LOGDIR=/raid/bac/kaggle/logs/recursion_cell/test/190730/cutmix/fold_$fold/resnet50/
+        LOGDIR=/raid/bac/kaggle/logs/recursion_cell/test/190730/different_schedulers/fold_$fold/se_resnext50_32x4d/
         catalyst-dl run \
             --config=./configs/${RUN_CONFIG} \
             --logdir=$LOGDIR \

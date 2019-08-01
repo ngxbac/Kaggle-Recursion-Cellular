@@ -119,13 +119,14 @@ def predict_all():
 def predict_deepsupervision():
     test_csv = '/raid/data/kaggle/recursion-cellular-image-classification/test.csv'
     # test_csv = './csv/valid_0.csv'
-    model_name = 'DSSENet'
+    model_name = 'DSInceptionV3'
+    experiment = '6channels_sgd'
 
     for channel_str in [
-        "[1,2,3,4,5]",
+        "[1,2,3,4,5,6]",
     ]:
 
-        log_dir = f"/raid/bac/kaggle/logs/recursion_cell/test/190729/fold_0/{model_name}/"
+        log_dir = f"/raid/bac/kaggle/logs/recursion_cell/test/190731/fold_0/{model_name}/"
         root = "/raid/data/kaggle/recursion-cellular-image-classification/"
         sites = [1]
         channels = [int(i) for i in channel_str[1:-1].split(',')]
@@ -133,8 +134,8 @@ def predict_deepsupervision():
         # log_dir = log_dir.replace('[', '[[]')
         # log_dir = log_dir.replace(']', '[]]')
 
-        ckp = os.path.join(log_dir, "checkpoints/stage1.50.pth")
-        model = DSSENet(
+        ckp = os.path.join(log_dir, "checkpoints/best.pth")
+        model = DSInceptionV3(
             num_classes=1108,
             n_channels=len(channels) * len(sites)
         )
@@ -177,7 +178,7 @@ def predict_deepsupervision():
         # submission['sirna'] = all_preds.astype(int)
         os.makedirs("./prediction/DS/", exist_ok=True)
         # submission.to_csv(f'./prediction/DS/{model_name}_test.csv', index=False, columns=['id_code', 'sirna'])
-        np.save(f"./prediction/DS/{model_name}_test.npy", preds)
+        np.save(f"./prediction/DS/{model_name}_{experiment}.npy", preds)
 
 
 if __name__ == '__main__':
