@@ -1,9 +1,54 @@
 from catalyst.dl.core import Callback, RunnerState
 from catalyst.dl.callbacks import CriterionCallback
+from catalyst.dl.utils.criterion import accuracy
 import torch
 import torch.nn as nn
 import numpy as np
 from typing import List
+import logging
+from slack_logger import SlackHandler, SlackFormatter
+
+
+class SlackLogger(Callback):
+    """
+    Logger callback, translates state.metrics to console and text file
+    """
+
+    def __init__(self, url, channel):
+        self.logger = None
+        self.url = url
+        self.channel = channel
+
+    @staticmethod
+    def _get_logger(url, channel):
+        logger = logging.getLogger("metrics")
+        logger.setLevel(logging.INFO)
+
+        slackhandler = SlackHandler(
+            username='logger',
+            icon_emoji=':robot_face:',
+            url=url,
+            channel=channel
+        )
+        slackhandler.setLevel(logging.INFO)
+
+        formater = SlackFormatter()
+        slackhandler.setFormatter(formater)
+        logger.addHandler(slackhandler)
+
+        return logger
+
+    def on_stage_start(self, state: RunnerState):
+        self.logger = self._get_logger(self.url, self.channel)
+
+    def on_stage_end(self, state):
+        self.logger.handlers = []
+
+    def on_epoch_end(self, state):
+        pass
+        # import pdb
+        # pdb.set_trace()
+        # self.logger.info("", extra={"state": state})
 
 
 class LabelSmoothCriterionCallback(Callback):
@@ -139,3 +184,103 @@ class SmoothMixupCallback(LabelSmoothCriterionCallback):
         loss = self.lam * criterion(pred, y_a) + \
             (1 - self.lam) * criterion(pred, y_b)
         return loss
+
+
+
+
+class DSCriterionCallback(Callback):
+    def __init__(
+        self,
+        input_key: str = "targets",
+        output_key: str = "logits",
+        prefix: str = "loss",
+        criterion_key: str = None,
+        loss_key: str = None,
+        multiplier: float = 1.0,
+        loss_weights: List[float] = None,
+    ):
+        self.input_key = input_key
+        self.output_key = output_key
+        self.prefix = prefix
+        self.criterion_key = criterion_key
+        self.loss_key = loss_key
+        self.multiplier = multiplier
+        self.loss_weights = loss_weights
+
+    def _add_loss_to_state(self, state: RunnerState, loss):
+        if self.loss_key is None:
+            if state.loss is not None:
+                if isinstance(state.loss, list):
+                    state.loss.append(loss)
+                else:
+                    state.loss = [state.loss, loss]
+            else:
+                state.loss = loss
+        else:
+            if state.loss is not None:
+                assert isinstance(state.loss, dict)
+                state.loss[self.loss_key] = loss
+            else:
+                state.loss = {self.loss_key: loss}
+
+    def _compute_loss(self, state: RunnerState, criterion):
+        outputs = state.output[self.output_key]
+        input = state.input[self.input_key]
+        assert len(self.loss_weights) == len(outputs)
+        loss = 0
+        for i, output in enumerate(outputs):
+            loss += criterion(output, input) * self.loss_weights[i]
+        return loss
+
+    def on_stage_start(self, state: RunnerState):
+        assert state.criterion is not None
+
+    def on_batch_end(self, state: RunnerState):
+        if state.loader_name.startswith("train"):
+            criterion = state.get_key(
+                key="criterion", inner_key=self.criterion_key
+            )
+        else:
+            criterion = nn.CrossEntropyLoss()
+
+        loss = self._compute_loss(state, criterion) * self.multiplier
+
+        state.metrics.add_batch_value(metrics_dict={
+            self.prefix: loss.item(),
+        })
+
+        self._add_loss_to_state(state, loss)
+
+
+class DSAccuracyCallback(Callback):
+    """
+    Accuracy metric callback.
+    """
+
+    def __init__(
+        self,
+        input_key: str = "targets",
+        output_key: str = "logits",
+        prefix: str = "acc",
+        logit_names: List[str] = None,
+    ):
+        self.prefix = prefix
+        self.metric_fn = accuracy
+        self.input_key = input_key
+        self.output_key = output_key
+        self.logit_names = logit_names
+
+    def on_batch_end(self, state: RunnerState):
+        outputs = state.output[self.output_key]
+        targets = state.input[self.input_key]
+
+        assert len(outputs) == len(self.logit_names)
+
+        batch_metrics = {}
+
+        for logit_name, output in zip(self.logit_names, outputs):
+            metric = self.metric_fn(output, targets)
+            key = f"{self.prefix}_{logit_name}"
+            batch_metrics[key] = metric[0]
+
+        state.metrics.add_batch_value(metrics_dict=batch_metrics)

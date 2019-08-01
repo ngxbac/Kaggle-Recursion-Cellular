@@ -223,18 +223,22 @@ class RecursionCellularSite(Dataset):
                  sites=[1],
                  mode='train',
                  channels=[1, 2, 3, 4, 5, 6],
+                 site_mode='random'
                  ):
         print("Channels ", channels)
         print("sites ", sites)
         print(csv_file)
+        assert site_mode in ['random', 'two', 'one']
         df = pd.read_csv(csv_file, nrows=None)
-        # if "train" in csv_file:
-        #     md = combine_metadata(base_path=root)
-        #     md = md[(md.dataset == mode) & (md.site == 1)]
-        #     md = md[md.experiment.isin(df.experiment)]
-        #     md.sirna = md.sirna.astype(np.int)
-        #     df = md
-        #
+        if mode == 'train' and site_mode == 'two':
+            df["site"] = 1
+            df_copy = df.copy()
+            df_copy["site"] = 2
+            df = pd.concat([df, df_copy], axis=0).reset_index(drop=True)
+
+        if not 'sirna' in df.columns:
+            df['sirna'] = 0
+
         self.pixel_stat = pd.read_csv(os.path.join(root, "pixel_stats.csv"))
         self.stat_dict = {}
         for experiment, plate, well, site, channel, mean, std in zip(self.pixel_stat.experiment,
@@ -262,22 +266,22 @@ class RecursionCellularSite(Dataset):
             self.stat_dict[experiment][plate][well][site][channel]["mean"] = mean / 255
             self.stat_dict[experiment][plate][well][site][channel]["std"] = std / 255
 
-
         self.transform = transform
         self.mode = mode
         self.channels = channels
-        self.sites = sites
+        if mode == 'train':
+            if site_mode == 'two':
+                self.sites = df["site"].values
+        else: # Test only use one by one site
+            self.sites = sites
 
         self.experiments = df['experiment'].values
         self.plates = df['plate'].values
         self.wells = df['well'].values
-
-        if mode != 'test':
-            self.labels = df['sirna'].values
-        else:
-            self.labels = [0] * len(self.experiments)
+        self.labels = df['sirna'].values
 
         self.root = root
+        self.site_mode = site_mode
 
     def __len__(self):
         return len(self.experiments)
@@ -291,14 +295,18 @@ class RecursionCellularSite(Dataset):
         channel_paths = []
 
         if self.mode == 'train':
-            if np.random.rand() < 0.5:
-                sites = [1]
-            else:
-                sites = [2]
-        else:
+            if self.site_mode == 'random':
+                if np.random.rand() < 0.5:
+                    sites = [1]
+                else:
+                    sites = [2]
+            elif self.site_mode == 'two':
+                sites = self.sites[idx]
+                sites = [sites]
+            else: # Only one site
+                sites = self.sites
+        else: # Only one site for test
             sites = self.sites
-
-        # sites = self.sites
 
         for site in sites:
             for channel in self.channels:
@@ -324,18 +332,12 @@ class RecursionCellularSite(Dataset):
                 mean_arr.append(mean)
 
         image = load_images_as_tensor(channel_paths, dtype=np.float32)
-        # image = convert_tensor_to_rgb(image)
-        # image = image / 255
         if self.transform:
             image = self.transform(image=image)['image']
 
         image = normalize(image, std=std_arr, mean=mean_arr, max_pixel_value=255)
         image = np.transpose(image, (2, 0, 1)).astype(np.float32)
-
-        if self.mode == 'train':
-            label = self.labels[idx]
-        else:
-            label = -1
+        label = self.labels[idx]
 
         return {
             "images": image,
