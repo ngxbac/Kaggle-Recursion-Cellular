@@ -1,5 +1,5 @@
 from .resnet import ResNet, ResNet50CutMix
-from .senet import cell_senet, SENetTIMM
+from .senet import cell_senet, SENetTIMM, SENetGrouplevel, SENetCellType
 from .densenet import cell_densenet
 from .efficientnet import EfficientNet
 from .inceptionv3 import InceptionV3TIMM

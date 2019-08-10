@@ -13,6 +13,7 @@ from schedulers import *
 registry.Model(ResNet)
 registry.Model(cell_senet)
 registry.Model(cell_densenet)
+registry.Model(SENetGrouplevel)
 registry.Model(EfficientNet)
 registry.Model(SENetTIMM)
 registry.Model(InceptionV3TIMM)
@@ -21,6 +22,7 @@ registry.Model(DSInceptionV3)
 registry.Model(DSSENet)
 registry.Model(ResNet50CutMix)
 registry.Model(Fishnet)
+registry.Model(SENetCellType)
 
 # Register callbacks
 registry.Callback(LabelSmoothCriterionCallback)
@@ -28,6 +30,7 @@ registry.Callback(SmoothMixupCallback)
 registry.Callback(DSAccuracyCallback)
 registry.Callback(DSCriterionCallback)
 registry.Callback(SlackLogger)
+registry.Callback(TwoHeadsCriterionCallback)
 
 # Register criterions
 registry.Criterion(LabelSmoothingCrossEntropy)

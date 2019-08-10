@@ -186,8 +186,6 @@ class SmoothMixupCallback(LabelSmoothCriterionCallback):
         return loss
 
 
-
-
 class DSCriterionCallback(Callback):
     def __init__(
         self,
@@ -230,6 +228,73 @@ class DSCriterionCallback(Callback):
         loss = 0
         for i, output in enumerate(outputs):
             loss += criterion(output, input) * self.loss_weights[i]
+        return loss
+
+    def on_stage_start(self, state: RunnerState):
+        assert state.criterion is not None
+
+    def on_batch_end(self, state: RunnerState):
+        if state.loader_name.startswith("train"):
+            criterion = state.get_key(
+                key="criterion", inner_key=self.criterion_key
+            )
+        else:
+            criterion = nn.CrossEntropyLoss()
+
+        loss = self._compute_loss(state, criterion) * self.multiplier
+
+        state.metrics.add_batch_value(metrics_dict={
+            self.prefix: loss.item(),
+        })
+
+        self._add_loss_to_state(state, loss)
+
+
+class TwoHeadsCriterionCallback(Callback):
+    def __init__(
+        self,
+        input_key: str = "targets",
+        output_key: str = "logits",
+        prefix: str = "loss",
+        criterion_key: str = None,
+        loss_key: str = None,
+        multiplier: float = 1.0,
+        loss_weights: List[float] = None,
+    ):
+        self.input_key = input_key
+        self.output_key = output_key
+        self.prefix = prefix
+        self.criterion_key = criterion_key
+        self.loss_key = loss_key
+        self.multiplier = multiplier
+        self.loss_weights = loss_weights
+
+    def _add_loss_to_state(self, state: RunnerState, loss):
+        if self.loss_key is None:
+            if state.loss is not None:
+                if isinstance(state.loss, list):
+                    state.loss.append(loss)
+                else:
+                    state.loss = [state.loss, loss]
+            else:
+                state.loss = loss
+        else:
+            if state.loss is not None:
+                assert isinstance(state.loss, dict)
+                state.loss[self.loss_key] = loss
+            else:
+                state.loss = {self.loss_key: loss}
+
+    def _compute_loss(self, state: RunnerState, criterion):
+        outputs = state.output[self.output_key]
+        outputs1 = state.output["logits1"]
+        input_sirna = state.input[self.input_key]
+        input_cell = state.input['cell_type']
+        loss = 0
+
+        loss += criterion(outputs, input_sirna)
+        loss += nn.CrossEntropyLoss()(outputs1, input_cell)
+
         return loss
 
     def on_stage_start(self, state: RunnerState):
