@@ -3,6 +3,7 @@ from catalyst.dl.callbacks import CriterionCallback
 from catalyst.dl.utils.criterion import accuracy
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 import numpy as np
 from typing import List
 import logging
@@ -21,7 +22,8 @@ class SlackLogger(Callback):
 
     @staticmethod
     def _get_logger(url, channel):
-        logger = logging.getLogger("metrics")
+        logger = \
+            logging.getLogger("metrics")
         logger.setLevel(logging.INFO)
 
         slackhandler = SlackHandler(
@@ -349,3 +351,74 @@ class DSAccuracyCallback(Callback):
             batch_metrics[key] = metric[0]
 
         state.metrics.add_batch_value(metrics_dict=batch_metrics)
+
+
+class GAINCriterionCallback(Callback):
+    def __init__(
+        self,
+        input_key: str = "targets",
+        output_cls_key: str = "logits",
+        output_am_key: str = "logits_am",
+        prefix: str = "loss",
+        criterion_key: str = None,
+        loss_key: str = None,
+        multiplier: float = 1.0,
+    ):
+        self.input_key = input_key
+        self.output_cls_key = output_cls_key
+        self.output_am_key = output_am_key
+        self.prefix = prefix
+        self.criterion_key = criterion_key
+        self.loss_key = loss_key
+        self.multiplier = multiplier
+
+    def _add_loss_to_state(self, state: RunnerState, loss):
+        if self.loss_key is None:
+            if state.loss is not None:
+                if isinstance(state.loss, list):
+                    state.loss.append(loss)
+                else:
+                    state.loss = [state.loss, loss]
+            else:
+                state.loss = loss
+        else:
+            if state.loss is not None:
+                assert isinstance(state.loss, dict)
+                state.loss[self.loss_key] = loss
+            else:
+                state.loss = {self.loss_key: loss}
+
+    def _compute_loss(self, state: RunnerState, criterion):
+        outputs_cls = state.output[self.output_cls_key]
+        outputs_am = state.output[self.output_am_key]
+        if not (outputs_am is None):
+            input = state.input[self.input_key]
+            loss = criterion(outputs_cls, input) * 0.9
+            loss_am = F.softmax(outputs_am)
+            loss_am, _ = loss_am.max(dim=1)
+            loss_am = loss_am.sum() / loss_am.size(0)
+            loss += loss_am * 0.1
+            return loss
+        else:
+            input = state.input[self.input_key]
+            loss = criterion(outputs_cls, input)
+            return loss
+
+    def on_stage_start(self, state: RunnerState):
+        assert state.criterion is not None
+
+    def on_batch_end(self, state: RunnerState):
+        if state.loader_name.startswith("train"):
+            criterion = state.get_key(
+                key="criterion", inner_key=self.criterion_key
+            )
+        else:
+            criterion = nn.CrossEntropyLoss()
+
+        loss = self._compute_loss(state, criterion) * self.multiplier
+
+        state.metrics.add_batch_value(metrics_dict={
+            self.prefix: loss.item(),
+        })
+
+        self._add_loss_to_state(state, loss)

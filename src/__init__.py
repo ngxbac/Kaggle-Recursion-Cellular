@@ -23,6 +23,7 @@ registry.Model(DSSENet)
 registry.Model(ResNet50CutMix)
 registry.Model(Fishnet)
 registry.Model(SENetCellType)
+registry.Model(GAIN)
 
 # Register callbacks
 registry.Callback(LabelSmoothCriterionCallback)
@@ -31,6 +32,7 @@ registry.Callback(DSAccuracyCallback)
 registry.Callback(DSCriterionCallback)
 registry.Callback(SlackLogger)
 registry.Callback(TwoHeadsCriterionCallback)
+registry.Callback(GAINCriterionCallback)
 
 # Register criterions
 registry.Criterion(LabelSmoothingCrossEntropy)

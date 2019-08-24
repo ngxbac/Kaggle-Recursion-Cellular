@@ -6,3 +6,4 @@ from .inceptionv3 import InceptionV3TIMM
 from .gluon_resnet import GluonResnetTIMM
 from .deepsupervision import DSInceptionV3, DSSENet
 from .fish_net import Fishnet
+from .gain import GAIN

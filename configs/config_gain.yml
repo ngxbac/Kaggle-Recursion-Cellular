@@ -1,9 +1,9 @@
 model_params:
-  model: cell_senet
-  n_channels: 5
+  model: GAIN
+  n_channels: 3
   num_classes: 1108
   model_name: "se_resnext50_32x4d"
-#  pretrained: "/raid/bac/pretrained_models/pytorch/fishnet150_ckpt.tar"
+  grad_layer: "_features.4"
 
 args:
   expdir: "src"
@@ -24,7 +24,7 @@ stages:
     criterion: LabelSmoothingCrossEntropy
 
   data_params:
-    batch_size: 64
+    batch_size: 32
     num_workers: 8
     drop_last: False
     # drop_last: True
@@ -52,12 +52,10 @@ stages:
 
     callbacks_params: &callback_params
       loss:
-        #        callback: CriterionCallback
-#        callback: TwoHeadsCriterionCallback
-        callback: LabelSmoothCriterionCallback
+        callback: GAINCriterionCallback
       optimizer:
         callback: OptimizerCallback
-        accumulation_steps: 2
+        accumulation_steps: 4
       accuracy:
         callback: AccuracyCallback
         accuracy_args: [1]
