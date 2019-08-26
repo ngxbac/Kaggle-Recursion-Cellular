@@ -38,5 +38,6 @@ registry.Criterion(LabelSmoothingCrossEntropy)
 # Register optimizers
 registry.Optimizer(AdamW)
 registry.Optimizer(Nadam)
+registry.Optimizer(RAdam)
 
 registry.Scheduler(CyclicLRFix)

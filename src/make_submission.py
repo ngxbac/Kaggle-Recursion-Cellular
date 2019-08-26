@@ -94,9 +94,9 @@ def predict_one():
     # test_csv = './csv/valid_0.csv'
 
     model_name = 'se_resnext50_32x4d'
-    experiment = "different_schedulers"
+    experiment = "dont_drop_14"
 
-    log_dir = f"/raid/bac/kaggle/logs/recursion_cell/test/190730/{experiment}/fold_0/{model_name}/"
+    log_dir = f"/raid/bac/kaggle/logs/recursion_cell/test/190824/{experiment}/fold_0/{model_name}/"
     root = "/raid/data/kaggle/recursion-cellular-image-classification/"
     sites = [1]
     channels = [1,2,3,4,5]
@@ -134,7 +134,7 @@ def predict_one():
 
         loader = DataLoader(
             dataset=dataset,
-            batch_size=64,
+            batch_size=128,
             shuffle=False,
             num_workers=4,
         )
@@ -143,12 +143,12 @@ def predict_one():
         preds.append(pred)
 
     preds = np.asarray(preds).mean(axis=0)
-    # all_preds = np.argmax(preds, axis=1)
+    all_preds = np.argmax(preds, axis=1)
     df = pd.read_csv(test_csv)
-    # submission = df.copy()
-    # submission['sirna'] = all_preds.astype(int)
+    submission = df.copy()
+    submission['sirna'] = all_preds.astype(int)
     os.makedirs("submission/", exist_ok=True)
-    # submission.to_csv(f'./submission/{model_name}_{experiment}.csv', index=False, columns=['id_code', 'sirna'])
+    submission.to_csv(f'./submission/{model_name}_{experiment}.csv', index=False, columns=['id_code', 'sirna'])
     np.save(f"./submission/{model_name}_{experiment}.npy", preds)
 
 
