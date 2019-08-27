@@ -53,15 +53,21 @@ class Experiment(ConfigExperiment):
         image_size = kwargs.get("image_size", 320)
         train_csv = kwargs.get('train_csv', None)
         valid_csv = kwargs.get('valid_csv', None)
-        pseudo_csv = kwargs.get('pseudo_csv', None)
         sites = kwargs.get('sites', [1])
         channels = kwargs.get('channels', [1, 2, 3, 4, 5, 6])
         site_mode = kwargs.get('site_mode', 'random')
         root = kwargs.get('root', None)
+        is_pseudo = kwargs.get('is_pseudo', False)
+        if is_pseudo:
+            dataset_function = RecursionCellularPseudo
+            print("Using pseudo dataset")
+        else:
+            dataset_function = RecursionCellularSite
+            print("Using normal dataset")
 
         if train_csv:
             transform = train_aug(image_size)
-            train_set = RecursionCellularSite(
+            train_set = dataset_function(
                 csv_file=train_csv,
                 root=root,
                 transform=transform,
@@ -70,26 +76,11 @@ class Experiment(ConfigExperiment):
                 channels=channels,
                 site_mode=site_mode
             )
-
-            if pseudo_csv:
-                pseudo_dataset = RecursionCellularSite(
-                    csv_file=pseudo_csv,
-                    root=root,
-                    transform=transform,
-                    mode='test',
-                    sites=sites,
-                    channels=channels,
-                    site_mode=site_mode
-                )
-
-                train_set = ConcatDataset([
-                    train_set, pseudo_dataset
-                ])
             datasets["train"] = train_set
 
         if valid_csv:
             transform = valid_aug(image_size)
-            valid_set = RecursionCellularSite(
+            valid_set = dataset_function(
                 csv_file=valid_csv,
                 root=root,
                 transform=transform,

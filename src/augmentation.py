@@ -56,7 +56,7 @@ class ChannelDropoutCustom(ImageOnlyTransform):
 
 def train_aug(image_size=224):
     return Compose([
-        ChannelDropoutCustom(),
+        ChannelDropout(),
         # CLAHE(),
         RandomRotate90(),
         Flip(),

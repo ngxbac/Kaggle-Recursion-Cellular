@@ -343,3 +343,136 @@ class RecursionCellularSite(Dataset):
             "images": image,
             "targets": label
         }
+
+
+class RecursionCellularPseudo(Dataset):
+
+    def __init__(self,
+                 csv_file,
+                 root,
+                 transform,
+                 sites=[1],
+                 mode='train',
+                 channels=[1, 2, 3, 4, 5, 6],
+                 site_mode='random'
+                 ):
+        print("Channels ", channels)
+        print("sites ", sites)
+        print(csv_file)
+        assert site_mode in ['random', 'two', 'one']
+        df = pd.read_csv(csv_file, nrows=None)
+        if mode == 'train' and site_mode == 'two':
+            df["site"] = 1
+            df_copy = df.copy()
+            df_copy["site"] = 2
+            df = pd.concat([df, df_copy], axis=0).reset_index(drop=True)
+
+        if not 'sirna' in df.columns:
+            df['sirna'] = 0
+
+        self.pixel_stat = pd.read_csv(os.path.join(root, "pixel_stats.csv"))
+        self.stat_dict = {}
+        for experiment, plate, well, site, channel, mean, std in zip(self.pixel_stat.experiment,
+                                                                   self.pixel_stat.plate,
+                                                                   self.pixel_stat.well,
+                                                                   self.pixel_stat.site,
+                                                                   self.pixel_stat.channel,
+                                                                   self.pixel_stat["mean"],
+                                                                   self.pixel_stat["std"]):
+            if not experiment in self.stat_dict:
+                self.stat_dict[experiment] = {}
+
+            if not plate in self.stat_dict[experiment]:
+                self.stat_dict[experiment][plate] = {}
+
+            if not well in self.stat_dict[experiment][plate]:
+                self.stat_dict[experiment][plate][well] = {}
+
+            if not site in self.stat_dict[experiment][plate][well]:
+                self.stat_dict[experiment][plate][well][site] = {}
+
+            if not channel in self.stat_dict[experiment][plate][well][site]:
+                self.stat_dict[experiment][plate][well][site][channel] = {}
+
+            self.stat_dict[experiment][plate][well][site][channel]["mean"] = mean / 255
+            self.stat_dict[experiment][plate][well][site][channel]["std"] = std / 255
+
+        self.transform = transform
+        self.mode = mode
+        self.channels = channels
+        if mode == 'train':
+            if site_mode == 'two':
+                self.sites = df["site"].values
+        else: # Test only use one by one site
+            self.sites = sites
+
+        self.experiments = df['experiment'].values
+        self.plates = df['plate'].values
+        self.wells = df['well'].values
+        self.labels = df['sirna'].values
+        self.datasets = df['dataset'].values
+
+        self.root = root
+        self.site_mode = site_mode
+
+    def __len__(self):
+        return len(self.experiments)
+
+    def __getitem__(self, idx):
+
+        experiment = self.experiments[idx]
+        plate = self.plates[idx]
+        well = self.wells[idx]
+        dataset = self.datasets[idx]
+
+        channel_paths = []
+
+        if self.mode == 'train':
+            if self.site_mode == 'random':
+                if np.random.rand() < 0.5:
+                    sites = [1]
+                else:
+                    sites = [2]
+            elif self.site_mode == 'two':
+                sites = self.sites[idx]
+                sites = [sites]
+            else: # Only one site
+                sites = self.sites
+        else: # Only one site for test
+            sites = self.sites
+
+        for site in sites:
+            for channel in self.channels:
+                path = image_path(
+                    dataset=dataset,
+                    experiment=experiment,
+                    plate=plate,
+                    address=well,
+                    channel=channel,
+                    site=site,
+                    base_path=self.root,
+                )
+                channel_paths.append(path)
+
+        std_arr = []
+        mean_arr = []
+
+        for site in sites:
+            for channel in self.channels:
+                mean = self.stat_dict[experiment][plate][well][site][channel]["mean"]
+                std = self.stat_dict[experiment][plate][well][site][channel]["std"]
+                std_arr.append(std)
+                mean_arr.append(mean)
+
+        image = load_images_as_tensor(channel_paths, dtype=np.float32)
+        if self.transform:
+            image = self.transform(image=image)['image']
+
+        image = normalize(image, std=std_arr, mean=mean_arr, max_pixel_value=255)
+        image = np.transpose(image, (2, 0, 1)).astype(np.float32)
+        label = self.labels[idx]
+
+        return {
+            "images": image,
+            "targets": label
+        }
