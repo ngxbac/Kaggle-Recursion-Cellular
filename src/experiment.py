@@ -57,13 +57,18 @@ class Experiment(ConfigExperiment):
         channels = kwargs.get('channels', [1, 2, 3, 4, 5, 6])
         site_mode = kwargs.get('site_mode', 'random')
         root = kwargs.get('root', None)
-        is_pseudo = kwargs.get('is_pseudo', False)
-        if is_pseudo:
+        dataset = kwargs.get('dataset', "normal")
+        if dataset == 'pseudo':
             dataset_function = RecursionCellularPseudo
             print("Using pseudo dataset")
-        else:
+        elif dataset == 'normal':
             dataset_function = RecursionCellularSite
             print("Using normal dataset")
+        elif dataset == 'control':
+            dataset_function = RecursionCellularControl
+            print("Using Control dataset")
+        else:
+            raise("Invalid")
 
         if train_csv:
             transform = train_aug(image_size)
@@ -86,7 +91,8 @@ class Experiment(ConfigExperiment):
                 transform=transform,
                 mode='train',
                 sites=sites,
-                channels=channels
+                channels=channels,
+                site_mode=site_mode
             )
             datasets["valid"] = valid_set
 

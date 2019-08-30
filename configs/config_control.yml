@@ -1,15 +1,13 @@
 model_params:
   model: cell_senet
   n_channels: 5
-  num_classes: 1108
+  num_classes: 31
   model_name: "se_resnext50_32x4d"
-  weight: "/raid/bac/kaggle/logs/recursion_cell/test/190826/controls/se_resnext50_32x4d/checkpoints/best.pth"
 
 args:
   expdir: "src"
   logdir: &logdir "./logs/cell"
   baselogdir: "./logs/cell"
-  # resume: "/raid/bac/kaggle/logs/recursion_cell/test/190826/pseudo_from_control/fold_0/se_resnext50_32x4d/checkpoints/best.pth"
 
 distributed_params:
   opt_level: O1
@@ -21,7 +19,6 @@ stages:
     minimize_metric: False
 
   criterion_params:
-#    criterion: CrossEntropyLoss
     criterion: LabelSmoothingCrossEntropy
 
   data_params:
@@ -33,7 +30,8 @@ stages:
     image_size: &image_size 512
     train_csv: "./csv/train_0.csv"
     valid_csv: "./csv/valid_0.csv"
-    dataset: "pseudo"
+    dataset: "control"
+    site_mode: "two"
     root: "/raid/data/kaggle/recursion-cellular-image-classification/"
     sites: [1]
     channels: [1,2,3,4,5,6]
@@ -81,7 +79,7 @@ stages:
 
     scheduler_params:
       scheduler: OneCycleLR
-      num_steps: &num_epochs 40
+      num_steps: &num_epochs 10
       lr_range: [0.0005, 0.00001]
       # lr_range: [0.0015, 0.00003]
       warmup_steps: 5

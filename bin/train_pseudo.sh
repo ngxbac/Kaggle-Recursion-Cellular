@@ -4,9 +4,10 @@ export CUDA_VISIBLE_DEVICES=2,3
 RUN_CONFIG=config_pseudo.yml
 
 
-for channels in [1,2,3,4,5]; do
+PRETRAINED_CONTROL=''
+for channels in [1,2,3,4,5] [1,2,3,4,6] [1,2,3,5,6] [1,2,4,5,6] [1,3,4,5,6] [2,3,4,5,6]; do
     for fold in 0; do
-        LOGDIR=/raid/bac/kaggle/logs/recursion_cell/test/190826/pseudo_drop1/fold_$fold/se_resnext50_32x4d/
+        LOGDIR=/raid/bac/kaggle/logs/recursion_cell/pseudo_from_control/$channels/fold_$fold/se_resnext50_32x4d/
         catalyst-dl run \
             --config=./configs/${RUN_CONFIG} \
             --logdir=$LOGDIR \
@@ -14,6 +15,7 @@ for channels in [1,2,3,4,5]; do
             --stages/data_params/channels=$channels:list \
             --stages/data_params/train_csv=./csv/pseudo/train_$fold.csv:str \
             --stages/data_params/valid_csv=./csv/pseudo/valid_$fold.csv:str \
+            --model_params/weight=$PRETRAINED_CONTROL/$channels/se_resnext50_32x4d/checkpoints/best.pth \
             --verbose
     done
 done
