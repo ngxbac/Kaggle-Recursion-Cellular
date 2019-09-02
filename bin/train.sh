@@ -4,6 +4,7 @@ export CUDA_VISIBLE_DEVICES=2,3
 RUN_CONFIG=config.yml
 
 
+PRETRAINED_CONTROL=/raid/bac/kaggle/logs/recursion_cell/pretrained_controls/
 for channels in [1,2,3,4,5]; do
     for fold in 0; do
         LOGDIR=/raid/bac/kaggle/logs/recursion_cell/test/190824/dont_drop_1/fold_$fold/se_resnext50_32x4d/
@@ -14,6 +15,7 @@ for channels in [1,2,3,4,5]; do
             --stages/data_params/channels=$channels:list \
             --stages/data_params/train_csv=./csv/train_$fold.csv:str \
             --stages/data_params/valid_csv=./csv/valid_$fold.csv:str \
+            --model_params/weight=$PRETRAINED_CONTROL/$channels/se_resnext50_32x4d/checkpoints/best.pth:str \
             --verbose
     done
 done

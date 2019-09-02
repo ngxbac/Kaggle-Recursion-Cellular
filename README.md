@@ -6,28 +6,39 @@
 - catalyst == 19.06.5
 
 # How to train 
-- In `configs/config.yml`  
-Change: `stages/data_params/root` to your root data that you download from Kaggle
-
-- In `bin/train.sh`  
-Change: 
-  - `export CUDA_VISIBLE_DEVICES=2,3` which GPUs are used for training
-  - `LOGDIR`: saved checkpoints, logs, etc
-  
-- Run: `bash bin/train.sh` 
-- Take a coffe or go to sleep
-
-
-# How to predict 
-Please refer `make_submission.py`. 
-
-- Change following:
-```python
-    test_csv = '/raid/data/kaggle/recursion-cellular-image-classification/test.csv'
-    # test_csv = './csv/valid_0.csv'
-    log_dir = "/raid/bac/kaggle/logs/recursion_cell/test/rgb_no_crop_512_accum2_456/se_resnext50_32x4d/"
-    root = "/raid/data/kaggle/recursion-cellular-image-classification/"
-
+## Pretrained with controls
+```bash
+bash bin/train_control.sh
 ```
+
+Pretrained models are saved at:
+`/raid/bac/kaggle/logs/recursion_cell/pretrained_controls/$channels/se_resnext50_32x4d/`  
+where `channels` can be: `[1,2,3,4,5], etc`
+
+## Train with pseudo data
+```bash
+bash bin/train_pseudo.sh
+```
+
+* `PRETRAINED_CONTROL`: is the root folder of pretrained models above  
+
+* `--model_params/weight=
+$PRETRAINED_CONTROL/$channels/se_resnext50_32x4d/checkpoints/best.pth:str \`  is the weight of 
+corresponding model pretrained on controls dataset.
+
+
+## Train with usually data
+Similar to `Train with pseudo data` part
+```bash
+bash bin/train.sh
+```
+
+* `PRETRAINED_CONTROL`: is the root folder of pretrained models above  
+
+* `--model_params/weight=
+$PRETRAINED_CONTROL/$channels/se_resnext50_32x4d/checkpoints/best.pth:str \`  is the weight of 
+corresponding model pretrained on controls dataset.
+
+
 
 - Run: `python src/make_submission.csv`
