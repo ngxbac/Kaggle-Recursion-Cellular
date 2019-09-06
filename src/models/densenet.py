@@ -1,12 +1,13 @@
 import torch.nn as nn
+import torch
 import pretrainedmodels
 from cnn_finetune import make_model
 
 
-def cell_densenet(model_name='densenet121', num_classes=1108, n_channels=6):
+def cell_densenet(model_name='densenet121', num_classes=1108, n_channels=6, weight=None):
     model = make_model(
         model_name=model_name,
-        num_classes=num_classes,
+        num_classes=31,
         pretrained=True
     )
     conv1 = model._features[0]
@@ -20,6 +21,17 @@ def cell_densenet(model_name='densenet121', num_classes=1108, n_channels=6):
     # copy pretrained weights
     model._features[0].weight.data[:,:3,:,:] = conv1.weight.data
     model._features[0].weight.data[:,3:n_channels,:,:] = conv1.weight.data[:,:int(n_channels-3),:,:]
+
+    if weight:
+        model_state_dict = torch.load(weight)['model_state_dict']
+        model.load_state_dict(model_state_dict)
+        print(f"\n\n******************************* Loaded checkpoint {weight}")
+
+    in_features = model._classifier.in_features
+    model._classifier = nn.Linear(
+        in_features=in_features, out_features=num_classes
+    )
+
     return model
 
 

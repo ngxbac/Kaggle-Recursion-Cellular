@@ -237,9 +237,9 @@ def cell_senet(model_name='se_resnext50_32x4d', num_classes=1108, n_channels=6, 
         model_state_dict = torch.load(weight)['model_state_dict']
         model.load_state_dict(model_state_dict)
         print(f"\n\n******************************* Loaded checkpoint {weight}")
-        in_features = model._classifier.in_features
-        model._classifier = nn.Linear(
-            in_features=in_features, out_features=num_classes
-        )
+    in_features = model._classifier.in_features
+    model._classifier = nn.Linear(
+        in_features=in_features, out_features=num_classes
+    )
 
     return model
