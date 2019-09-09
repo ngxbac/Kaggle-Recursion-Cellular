@@ -24,6 +24,7 @@ registry.Model(ResNet50CutMix)
 registry.Model(Fishnet)
 registry.Model(SENetCellType)
 registry.Model(SENetCellMultipleDropout)
+registry.Model(MixNet)
 
 # Register callbacks
 registry.Callback(LabelSmoothCriterionCallback)
