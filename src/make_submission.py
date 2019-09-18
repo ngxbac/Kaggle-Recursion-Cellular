@@ -24,7 +24,7 @@ def predict(model, loader):
     with torch.no_grad():
         for dct in tqdm(loader, total=len(loader)):
             images = dct['images'].to(device)
-            pred = model(images)
+            pred = model(images)[0]
             # pred = Ftorch.softmax(pred)
             pred = pred.detach().cpu().numpy()
             preds.append(pred)
@@ -34,22 +34,23 @@ def predict(model, loader):
 
 
 def predict_all():
-    test_csv = './data/test.csv'
+    test_csv = '/raid/data/kaggle/recursion-cellular-image-classification/test.csv'
+    model_name = 'se_resnext50_32x4d'
+    experiment = "pseudo_from_control"
     # test_csv = './csv/valid_0.csv'
 
-    for fold in [0,1,2,3,4]:
-        model_name = 'se_resnext50_32x4d'
-
-        log_dir = f"./bin/log/checkpoints/"
-        root = "./data/"
+    for fold in [1,2,3,4]:
+        log_dir = f"/raid/bac/kaggle/logs/recursion_cell/{experiment}/{channels}/fold_{fold}/{model_name}/"
+        root = "/raid/data/kaggle/recursion-cellular-image-classification/"
         sites = [1]
-        channels = [1,2,3,4]
+        channels = [1, 2, 3, 4, 5]
 
         preds = []
         model = cell_senet(
-            model_name="se_resnext50_32x4d",
+            model_name=model_name,
             num_classes=1108,
-            n_channels=len(channels) * len(sites)
+            n_channels=len(channels) * len(sites),
+            weight="/raid/bac/kaggle/logs/recursion_cell/test/190826/controls/se_resnext50_32x4d/checkpoints/best.pth",
         )
 
         checkpoint = f"{log_dir}/checkpoints/best.pth"
@@ -73,7 +74,7 @@ def predict_all():
                 dataset=dataset,
                 batch_size=128,
                 shuffle=False,
-                num_workers=12,
+                num_workers=4,
             )
 
             pred = predict(model, loader)
@@ -84,9 +85,9 @@ def predict_all():
         df = pd.read_csv(test_csv)
         submission = df.copy()
         submission['sirna'] = all_preds.astype(int)
-        os.makedirs("predict_folds/", exist_ok=True)
-        submission.to_csv(f'./predict_folds/{model_name}_[1,2,3,4]_{fold}.csv', index=False, columns=['id_code', 'sirna'])
-        np.save(f"./predict_folds/{model_name}_[1,2,3,4]_{fold}.npy", preds)
+        os.makedirs(f"./prediction_{experiment}/fold_{fold}", exist_ok=True)
+        submission.to_csv(f'./prediction_{experiment}/fold_{fold}/{model_name}_{channels}.csv', index=False, columns=['id_code', 'sirna'])
+        np.save(f"./prediction_{experiment}/fold_{fold}/{model_name}_{channels}.npy", preds)
 
 
 def predict_one():
@@ -94,9 +95,9 @@ def predict_one():
     # test_csv = './csv/valid_0.csv'
 
     model_name = 'se_resnext50_32x4d'
-    experiment = "dont_drop_14"
+    experiment = "pseudo_from_control_multidrop4_scheme2"
 
-    log_dir = f"/raid/bac/kaggle/logs/recursion_cell/test/190824/{experiment}/fold_0/{model_name}/"
+    log_dir = f"/raid/bac/kaggle/logs/recursion_cell/test/190826/{experiment}/fold_0/{model_name}/"
     root = "/raid/data/kaggle/recursion-cellular-image-classification/"
     sites = [1]
     channels = [1,2,3,4,5]
@@ -105,15 +106,9 @@ def predict_one():
     model = cell_senet(
         model_name=model_name,
         num_classes=1108,
-        n_channels=len(channels) * len(sites)
+        n_channels=len(channels) * len(sites),
+        weight="/raid/bac/kaggle/logs/recursion_cell/test/190826/controls/se_resnext50_32x4d/checkpoints/best.pth",
     )
-
-    # model = Fishnet(
-    #     n_channels=5,
-    #     num_classes=1108,
-    #     model_name=model_name,
-    #     pretrained="/raid/bac/pretrained_models/pytorch/fishnet150_ckpt.tar"
-    # )
 
     checkpoint = f"{log_dir}/checkpoints/best.pth"
     checkpoint = torch.load(checkpoint)

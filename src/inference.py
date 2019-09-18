@@ -49,37 +49,37 @@ def predict_ds(model, loader):
 
 
 def predict_all():
-    # test_csv = '/raid/data/kaggle/recursion-cellular-image-classification/test.csv'
-    test_csv = './csv/valid_0.csv'
+    test_csv = '/raid/data/kaggle/recursion-cellular-image-classification/test.csv'
+    # test_csv = "./csv/pseudo_all/valid_0"
+    # test_csv = './csv/valid_0.csv'
     model_name = 'se_resnext50_32x4d'
 
-    for channel_str in [
-        "[1,2,3,4]", "[1,2,3,5]", "[1,2,3,6]",
-        "[1,2,4,5]", "[1,2,4,6]", "[1,2,5,6]",
-        "[1,3,4,5]", "[1,3,4,6]", "[1,3,5,6]",
-        "[1,4,5,6]", "[2,3,4,5]", "[2,3,4,6]",
-        "[2,3,5,6]", "[2,4,5,6]", "[3,4,5,6]"
+    channel_str = "[1,2,3,4,5]"
+
+    scheme = "pseudoall2_from_control"
+
+    for fold in [
+        0
     ]:
 
-        log_dir = f"/raid/bac/kaggle/logs/recursion_cell/search_channels/fold_0/{channel_str}/{model_name}/"
+        log_dir = f"/raid/bac/kaggle/logs/recursion_cell/{scheme}/{channel_str}/fold_{fold}/{model_name}/"
         root = "/raid/data/kaggle/recursion-cellular-image-classification/"
         sites = [1]
         channels = [int(i) for i in channel_str[1:-1].split(',')]
 
-        # log_dir = log_dir.replace('[', '[[]')
-        # log_dir = log_dir.replace(']', '[]]')
-
         ckp = os.path.join(log_dir, "checkpoints/best.pth")
         model = cell_senet(
-            model_name="se_resnext50_32x4d",
+            model_name=model_name,
             num_classes=1108,
-            n_channels=len(channels) * len(sites)
+            n_channels=len(channels) * len(sites),
+            # weight=f"/raid/bac/kaggle/logs/recursion_cell/test/190826/controls/{model_name}/checkpoints/best.pth",
         )
 
-        checkpoint = torch.load(ckp)
+        checkpoint = f"{log_dir}/checkpoints/best.pth"
+        checkpoint = torch.load(checkpoint)
         model.load_state_dict(checkpoint['model_state_dict'])
         model = model.to(device)
-        # model = nn.DataParallel(model)
+        model = nn.DataParallel(model)
 
         print("*" * 50)
         print(f"checkpoint: {ckp}")
@@ -91,16 +91,17 @@ def predict_all():
                 csv_file=test_csv,
                 root=root,
                 transform=valid_aug(512),
-                mode='train',
+                mode='test',
                 sites=[site],
-                channels=channels
+                channels=channels,
+                site_mode="one",
             )
 
             loader = DataLoader(
                 dataset=dataset,
                 batch_size=128,
                 shuffle=False,
-                num_workers=8,
+                num_workers=4,
             )
 
             pred = predict(model, loader)
@@ -111,9 +112,9 @@ def predict_all():
         df = pd.read_csv(test_csv)
         submission = df.copy()
         submission['sirna'] = all_preds.astype(int)
-        os.makedirs("./prediction/fold_0/", exist_ok=True)
-        submission.to_csv(f'./prediction/fold_0/{model_name}_{channel_str}_valid.csv', index=False, columns=['id_code', 'sirna'])
-        np.save(f"./prediction/fold_0/{model_name}_{channel_str}_valid.npy", preds)
+        os.makedirs(f"./prediction2/{scheme}/fold_{fold}/", exist_ok=True)
+        submission.to_csv(f'./prediction2/{scheme}/fold_{fold}/{model_name}_{channel_str}_test.csv', index=False, columns=['id_code', 'sirna'])
+        np.save(f"./prediction2/{scheme}/fold_{fold}/{model_name}_{channel_str}_test.npy", preds)
 
 
 def predict_deepsupervision():
@@ -183,4 +184,5 @@ def predict_deepsupervision():
 
 if __name__ == '__main__':
     # predict_all()
-    predict_deepsupervision()
+    # predict_deepsupervision()
+    predict_all()

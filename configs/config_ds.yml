@@ -1,5 +1,5 @@
 model_params:
-  model: DSInceptionV3
+  model: DSResnet
   n_channels: 6
   num_classes: 1108
 
@@ -32,116 +32,55 @@ stages:
     valid_csv: "./csv/kfold5/valid_0.csv"
     root: "/raid/data/kaggle/recursion-cellular-image-classification/"
     sites: [1]
-    site_mode: 'random'
-    channels: [1, 2, 3, 4, 5, 6]
+    channels: [1,2,3,4,5,6]
 
-#  stage0:
-#
-#    optimizer_params:
-#      optimizer: Adam
-#      lr: 0.01
-#
-#    scheduler_params:
-#      scheduler: MultiStepLR
-#      milestones: [10]
-#      gamma: 0.3
-#
-#    state_params:
-#      num_epochs: 2
-#
-#    callbacks_params:
-#      loss:
-#        #callback: CriterionCallbac
-#        callback: LabelSmoothCriterionCallback
-#      optimizer:
-#        callback: OptimizerCallback
-#        accumulation_steps: 2
-#      accuracy:
-#        callback: AccuracyCallback
-#        accuracy_args: [1]
-#      scheduler:
-#        callback: SchedulerCallback
-#        reduce_metric: *reduce_metric
-#      saver:
-#        callback: CheckpointCallback
-#      slack:
-#        callback: SlackLogger
-#        channel: logs_cell
-#        url: "https://hooks.slack.com/services/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"
-
-  stage1:
+  stage0:
 
     optimizer_params:
-      optimizer: SGD
-      lr: 0.01
+      optimizer: Nadam
+      lr: 0.001
 
     scheduler_params:
-      scheduler: CyclicLRFix
-      base_lr: 0.01
-      max_lr: 0.03
-      step_size_up: 450
-      mode: "exp_range"
-#      cycle_momentum: False
+      scheduler: MultiStepLR
+      milestones: [10]
+      gamma: 0.3
 
     state_params:
-      num_epochs: 30
+      num_epochs: 2
 
     callbacks_params: &callback_params
       loss:
-        callback: DSCriterionCallback
-        loss_weights: [0.001, 0.005, 0.01, 0.02, 0.02, 0.1, 1.0]
+        callback: DSMixupCallback
+        loss_weights: [0.3, 0.3, 1.0]
+        fields: ["images"]
       optimizer:
         callback: OptimizerCallback
         accumulation_steps: 2
       accuracy:
         callback: DSAccuracyCallback
-        logit_names: ["m2", "m4", "m6", "m8", "m9", "m10", "final"]
+        logit_names: ["m2", "m3", "final"]
       scheduler:
         callback: SchedulerCallback
         reduce_metric: *reduce_metric
         mode: "batch"
       saver:
         callback: CheckpointCallback
-      slack:
-        callback: SlackLogger
-        channel: logs_cell
-        url: "https://hooks.slack.com/services/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"
 
-  stage2:
+  stage1:
 
     optimizer_params:
-      optimizer: SGD
-      lr: 0.002
+      optimizer: Nadam
+      lr: 0.0001
 
     scheduler_params:
-      scheduler: CyclicLRFix
-      base_lr: 0.002
-      max_lr: 0.004
-      step_size_up: 450
-      mode: "exp_range"
-    #      cycle_momentum: False
+      scheduler: OneCycleLR
+      num_steps: &num_epochs 40
+      lr_range: [0.0005, 0.00001]
+      # lr_range: [0.0015, 0.00003]
+      warmup_steps: 5
+      momentum_range: [0.85, 0.95]
 
     state_params:
-      num_epochs: 10
-
-    callbacks_params: *callback_params
-
-
-  stage3:
-
-    optimizer_params:
-      optimizer: SGD
-      lr: 0.0004
-
-    scheduler_params:
-      scheduler: CyclicLRFix
-      base_lr: 0.0004
-      max_lr: 0.0008
-      step_size_up: 450
-      mode: "exp_range"
-    #      cycle_momentum: False
-
-    state_params:
-      num_epochs: 10
+      num_epochs: *num_epochs
 
     callbacks_params: *callback_params

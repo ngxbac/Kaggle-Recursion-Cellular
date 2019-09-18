@@ -2,7 +2,7 @@ model_params:
   model: cell_senet
   n_channels: 5
   num_classes: 31
-  model_name: "se_resnext50_32x4d"
+  model_name: "se_resnext101_32x4d"
 
 args:
   expdir: "src"
@@ -22,7 +22,7 @@ stages:
     criterion: LabelSmoothingCrossEntropy
 
   data_params:
-    batch_size: 64
+    batch_size: 32
     num_workers: 8
     drop_last: False
     # drop_last: True
@@ -57,7 +57,7 @@ stages:
         callback: LabelSmoothCriterionCallback
       optimizer:
         callback: OptimizerCallback
-        accumulation_steps: 2
+        accumulation_steps: 4
       accuracy:
         callback: AccuracyCallback
         accuracy_args: [1,3]
