@@ -229,7 +229,7 @@ class RecursionCellularSite(Dataset):
         print("sites ", sites)
         print(csv_file)
         assert site_mode in ['random', 'two', 'one']
-        df = pd.read_csv(csv_file, nrows=None)
+        df = pd.read_csv(csv_file, nrows=1000)
         if mode == 'train' and site_mode == 'two':
             df["site"] = 1
             df_copy = df.copy()
@@ -360,7 +360,7 @@ class RecursionCellularPseudo(Dataset):
         print("sites ", sites)
         print(csv_file)
         assert site_mode in ['random', 'two', 'one']
-        df = pd.read_csv(csv_file, nrows=None)
+        df = pd.read_csv(csv_file, nrows=1000)
         if mode == 'train' and site_mode == 'two':
             df["site"] = 1
             df_copy = df.copy()
