@@ -2,6 +2,10 @@
 This repository is used for Recursion Cellular Image Classification.  
 The writeup can be found in [here](https://www.kaggle.com/c/recursion-cellular-image-classification/discussion/110337)
 
+
+Below you can find a outline of how to reproduce my solution for the <Competition Name> competition.
+If you run into any trouble with the setup/code or have any questions please contact me at <ngxbac.dt@gmail.com>
+
 The pipeline of this repository is shown as bellows
 ![Pipeline](images/pipeline.png)
 
@@ -10,6 +14,13 @@ There are 3 main parts:
 * I. Pretrained from control images which has 31 siRNAs
 * II. Continue fintuning models with image dataset which has 1108 siRNAs. 
 * III. Continue fintuning models with image dataset and pseudo labels. 
+
+# Hardware 
+DGX Workstation: 4 x V100 (16G)
+
+# Software 
+Please check the `docker/Dockerfile`.  
+Besides, you can check `requirement.txt`
 
 
 # Getting started 
