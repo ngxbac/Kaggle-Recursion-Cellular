@@ -25,14 +25,13 @@ stages:
     batch_size: 32
     num_workers: 8
     drop_last: False
-    # drop_last: True
 
     image_size: &image_size 512
     train_csv: "./csv/train_0.csv"
     valid_csv: "./csv/valid_0.csv"
     dataset: "control"
     site_mode: "two"
-    root: "/raid/data/kaggle/recursion-cellular-image-classification/"
+    root: "/data/"
     sites: [1]
     channels: [1,2,3,4,5,6]
 
@@ -52,8 +51,6 @@ stages:
 
     callbacks_params: &callback_params
       loss:
-        #        callback: CriterionCallback
-#        callback: TwoHeadsCriterionCallback
         callback: LabelSmoothCriterionCallback
       optimizer:
         callback: OptimizerCallback
@@ -66,10 +63,6 @@ stages:
         reduce_metric: *reduce_metric
       saver:
         callback: CheckpointCallback
-#      slack:
-#        callback: SlackLogger
-#        channel: logs_cell
-#        url: "https://hooks.slack.com/services/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"
 
   stage1:
 
@@ -81,7 +74,6 @@ stages:
       scheduler: OneCycleLR
       num_steps: &num_epochs 10
       lr_range: [0.0005, 0.00001]
-      # lr_range: [0.0015, 0.00003]
       warmup_steps: 5
       momentum_range: [0.85, 0.95]
 

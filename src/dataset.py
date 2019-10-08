@@ -489,12 +489,26 @@ class RecursionCellularControl(Dataset):
                  channels=[1, 2, 3, 4, 5, 6],
                  site_mode='random'
                  ):
+        """
+        Dataset to train with control images
+        :param csv_file: Does not matter.
+        :param root: Data root.
+        :param transform: albumentation composed functions.
+        :param sites: Site of image. Can be 1 or 2.
+        :param mode: Train or validation or test mode.
+        :param channels: The channels to be used. Ex: [1,2,3,4,5]
+        :param site_mode: can be ["one", "two", "random"]
+        If site_mode is "one", dataset load the `sites` of the image.
+        If site_mode is "two", dataset load both sides of the image. Now param `sites` does not matter.
+        If site_mode is "random", dataset load random site [1] or [2].
+        """
         print("Channels ", channels)
         print("sites ", sites)
         print(csv_file)
         assert site_mode in ['random', 'two', 'one']
         # df = pd.read_csv(csv_file, nrows=None)
         df = combine_metadata(base_path=root)
+        # df = df.sample(1000)
         df = df[
             (df.well_type != 'treatment') & (df.site != 1)
         ]

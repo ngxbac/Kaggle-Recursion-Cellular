@@ -57,13 +57,13 @@ class Experiment(ConfigExperiment):
         channels = kwargs.get('channels', [1, 2, 3, 4, 5, 6])
         site_mode = kwargs.get('site_mode', 'random')
         root = kwargs.get('root', None)
-        dataset = kwargs.get('dataset', "normal")
+        dataset = kwargs.get('dataset', "non_pseudo")
         if dataset == 'pseudo':
             dataset_function = RecursionCellularPseudo
             print("Using pseudo dataset")
-        elif dataset == 'normal':
+        elif dataset == 'non_pseudo':
             dataset_function = RecursionCellularSite
-            print("Using normal dataset")
+            print("Using non pseudo dataset")
         elif dataset == 'control':
             dataset_function = RecursionCellularControl
             print("Using Control dataset")
