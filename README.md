@@ -461,9 +461,25 @@ The `out_dir` will have the structure as follows:
 
 # Ensemble 
 
+Please note that: logits are the number of last FC layer which **is not** applied `softmax`.
+
 In [`src/ensemble.py`](src/ensemble.py#L47), `model_names` is the list of model that be used for ensemble.
 
   Ex: `model_names=['se_resnext50_32x4d', 'se_resnext101_32x4d', 'densenet121']`
+
+```bash
+export LC_ALL=C.UTF-8
+export LANG=C.UTF-8
+
+python src/ensemble.py ensemble --data_root /data/ --predict_root /predictions/pseudo/ --group_json group.json
+```
+
+# Ensemble with other logits 
+In our solution, we ensemble with other memeber. Following changes will make it works.
+
+In [`src/ensemble.py`](src/ensemble.py#L53),  
+`ensemble_preds = (ensemble_preds + other_logits) / 121`  
+Where:  `other_logits = np.load(<logit_path>)`.  
 
 ```bash
 export LC_ALL=C.UTF-8
