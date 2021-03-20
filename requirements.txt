@@ -26,7 +26,7 @@ imgaug==0.2.6
 ipython==7.5.0
 ipython-genutils==0.2.0
 jedi==0.13.3
-Jinja2==2.10.1
+Jinja2==2.11.3
 joblib==0.14.0
 jsonpatch==1.24
 jsonpointer==2.0
