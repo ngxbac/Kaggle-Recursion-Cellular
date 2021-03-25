@@ -69,7 +69,7 @@ PySocks==1.6.8
 python-dateutil==2.8.0
 pytz==2019.1
 PyWavelets==1.0.3
-PyYAML==5.1
+PyYAML==5.4
 pyzmq==18.1.0
 redis==3.3.8
 requests==2.21.0
