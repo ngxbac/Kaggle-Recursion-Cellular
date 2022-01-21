@@ -23,7 +23,7 @@ gym==0.14.0
 idna==2.8
 imageio==2.5.0
 imgaug==0.2.6
-ipython==7.5.0
+ipython==7.16.3
 ipython-genutils==0.2.0
 jedi==0.13.3
 Jinja2==2.10.1
