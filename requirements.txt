@@ -4,7 +4,7 @@ asn1crypto==0.24.0
 backcall==0.1.0
 beautifulsoup4==4.7.1
 catalyst==19.6.5
-certifi==2019.3.9
+certifi==2022.12.7
 cffi==1.12.3
 chardet==3.0.4
 Click==7.0
